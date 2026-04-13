@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>明日方舟綜合工具 · 廣東話版</title>
+    <title>明日方舟 + 終末地 綜合工具 </title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; }
         body {
@@ -19,7 +19,7 @@
         h1 { margin: 0 0 16px; font-weight: 400; color: #b7c9e2; }
         .tabs {
             display: flex; gap: 6px; border-bottom: 2px solid #3a465e;
-            margin-bottom: 20px;
+            margin-bottom: 20px; flex-wrap: wrap;
         }
         .tab-btn {
             background: #2f3a4f; border: none; color: #a6b8d9;
@@ -81,15 +81,16 @@
 </head>
 <body>
 <div class="app-container">
-    <h1>⚔️ 羅德島後勤終端 · 抽卡模擬 + 資源規劃</h1>
+    <h1>⚔️ 羅德島後勤終端 · 抽卡模擬 + 資源規劃 + 終末地</h1>
     
     <div class="tabs">
         <button class="tab-btn active" data-tab="gacha">🎲 抽卡模擬器</button>
         <button class="tab-btn" data-tab="resource">📦 資源需求計算</button>
         <button class="tab-btn" data-tab="pulls">🧮 抽數計算</button>
+        <button class="tab-btn" data-tab="endfield">🌌 終末地抽卡</button>
     </div>
 
-    <!-- 抽卡模擬器分頁 -->
+    <!-- 原有抽卡模擬器分頁 -->
     <div id="gacha" class="tab-pane active">
         <div class="card">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 12px;">
@@ -97,7 +98,7 @@
                 <div><label>單目標限定池：</label><br><input type="number" id="olNeed" value="0" min="0" step="1" class="small-input"></div>
                 <div><label>雙目標限定池：</label><br><input type="number" id="tlNeed" value="0" min="0" step="1" class="small-input"></div>
                 <div><label>聯動卡池數量：</label><br><input type="number" id="coopNeed" value="0" min="0" step="1" class="small-input"></div>
-                <div><label>模擬次數：</label><br><input type="number" id="simTimes" value="10000" min="100" step="1000" class="small-input"></div>
+                <div><label>模擬次數：</label><br><input type="number" id="simTimes" value="10000" min="100" step="1000" style="width: 150px;"></div>
             </div>
             <div style="margin-top: 20px; display: flex; gap: 16px; flex-wrap: wrap;">
                 <button id="startSimBtn">▶ 開始模擬</button>
@@ -109,13 +110,13 @@
         </div>
     </div>
 
-    <!-- 資源需求計算分頁 -->
+    <!-- 原有資源需求計算分頁 -->
     <div id="resource" class="tab-pane">
         <div class="card">
             <label>📋 升級路線（每行一個：星級 起始等級 結束等級 數量）</label>
             <textarea id="upgradeInput" rows="5" style="width:100%; font-family: monospace;" placeholder="例：5 230 260 1
-6 1 290 3">5 230 260 1
-6 1 290 1</textarea>
+6 01 290 3">5 230 260 1
+6 01 290 1</textarea>
             <p style="color:#a0b5d0; margin:4px 0;">* 接受01，230，240...280，290。01 = 精0 1級</p>
 
             <div style="display: flex; gap: 24px; flex-wrap: wrap; margin: 20px 0;">
@@ -174,7 +175,7 @@
         </div>
     </div>
 
-    <!-- 抽數計算分頁 -->
+    <!-- 原有抽數計算分頁 -->
     <div id="pulls" class="tab-pane">
         <div class="card">
             <div style="display: grid; gap: 16px; max-width: 500px;">
@@ -188,6 +189,23 @@
                 <button id="resetPullsBtn" style="background:#3f4d5e; margin-left:16px;">⟲ 重置</button>
             </div>
             <div id="pullsResult" class="result-box" style="margin-top:20px; font-size:20px;"></div>
+        </div>
+    </div>
+
+    <!-- 新增：終末地抽卡模擬分頁 -->
+    <div id="endfield" class="tab-pane">
+        <div class="card">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 12px;">
+                <div><label>🎯 終末地目標數量：</label><br><input type="number" id="efTarget" value="1" min="1" step="1" class="small-input"></div>
+                <div><label>🔁 模擬次數：</label><br><input type="number" id="efSimTimes" value="10000" min="100" step="1000" style="width: 150px;"></div>
+            </div>
+            <div style="margin-top: 20px; display: flex; gap: 16px; flex-wrap: wrap;">
+                <button id="startEfSimBtn">▶ 開始模擬</button>
+                <button id="efQueryBtn" disabled>🔍 查詢概率 / 所需抽數</button>
+                <button id="resetEfBtn" style="background:#3f4d5e;">⟲ 重置</button>
+            </div>
+            <progress id="efProgress" value="0" max="100"></progress>
+            <div id="efResult" class="result-box">未開始模擬，請設定參數後撳「開始模擬」。</div>
         </div>
     </div>
 </div>
@@ -216,7 +234,7 @@
     (function(){
         "use strict";
 
-        // ---------- 核心抽卡邏輯 (移植自Python) ----------
+        // ========== 原有明日方舟抽卡邏輯 ==========
         function six(sixProbi) {
             return Math.floor(Math.random() * 1000) + 1 <= sixProbi * 1000;
         }
@@ -279,14 +297,62 @@
             return total;
         }
 
-        // 資源計算常數
+        // ========== 新增終末地抽卡邏輯 ==========
+        // 單次獲得六星的抽數 (80抽硬保底)
+        function endfield_gacha() {
+            let sixed = false;
+            let six_probi = 0.008;
+            let count = 0;
+            // 前65抽 固定0.8%
+            for (let i = 1; i <= 65; i++) {
+                count++;
+                if (Math.random() <= six_probi) {
+                    sixed = true;
+                    break;
+                }
+            }
+            if (!sixed) {
+                // 66~80抽，每抽+5%機率
+                for (let j = 66; j <= 80; j++) {
+                    six_probi = 0.008 + 0.05 * (j - 65);
+                    count++;
+                    if (Math.random() <= six_probi) break;
+                }
+            }
+            return count;
+        }
+
+        // 獲得一個目標的總抽數 (50%機率提前停止，上限120)
+        function endfield_full_gacha() {
+            let total = 0;
+            while (total < 120) {
+                total += endfield_gacha();
+                // 50% 機率喺呢個六星之後停止
+                if (Math.random() < 0.5) {
+                    if (total > 120) total = 120;
+                    return total;
+                }
+            }
+            return 120;
+        }
+
+        // 模擬多個目標的總抽數
+        function endfield_total_gacha(targetCount) {
+            let total = 0;
+            for (let i = 0; i < targetCount; i++) {
+                total += endfield_full_gacha();
+            }
+            return total;
+        }
+
+        // ========== 資源計算常數 (原有) ==========
         const module4 = [20000,20000,30000], module5 = [40000,50000,60000], module6 = [80000,100000,120000];
         const uxp = [41715,58025,76125,106914,161200,255000];
         const uc = [29389,46048,67255,104194,171616,297577];
         const exp = [201211,290411,412411];
         const ec = [235117,400823,618717];
 
-        // ---------- 輔助函數 ----------
+        // ========== 輔助函數 (原有) ==========
         function parseUpgradeLines(text) {
             const lines = text.trim().split('\n');
             const result = [];
@@ -329,7 +395,7 @@
             return { exp: expNeeded, cash: cashNeededEC + cashNeededUC + moduleCash };
         }
 
-        // ---------- 分頁切換 ----------
+        // ========== 分頁切換 (原有，自動支援新tab) ==========
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -339,7 +405,7 @@
             });
         });
 
-        // ---------- 抽卡模擬器 UI ----------
+        // ========== 原有抽卡模擬器 UI ==========
         const startBtn = document.getElementById('startSimBtn');
         const queryBtn = document.getElementById('queryBtn');
         const progress = document.getElementById('simProgress');
@@ -373,7 +439,6 @@
             progress.value = 0;
             sortedList = []; oList = [];
 
-            // 使用 setTimeout 分塊模擬，避免阻塞UI
             const chunkSize = 500;
             let results = [];
             function runSimulationChunk(startIdx) {
@@ -385,7 +450,6 @@
                 if (end < times) {
                     setTimeout(() => runSimulationChunk(end), 10);
                 } else {
-                    // 完成
                     results.sort((a,b)=>a-b);
                     sortedList = results;
                     const n = sortedList.length;
@@ -463,14 +527,13 @@
             document.getElementById('closeQuery').addEventListener('click', ()=> queryWin.remove());
         });
 
-        // ---------- 資源計算器 ----------
+        // ========== 原有資源計算器 ==========
         let reservedExp = 0, reservedCash = 0;
         const reserveDisplay = document.getElementById('reserveDisplay');
         const modal = document.getElementById('reserveModal');
         
         document.getElementById('setReserveBtn').addEventListener('click', ()=>{
             modal.style.display = 'flex';
-            // 複製主頁面輸入到modal
             document.getElementById('modalUpgrade').value = document.getElementById('upgradeInput').value;
             ['m4','m5','m6'].forEach((s,idx)=>{
                 const star = ['4','5','6'][idx];
@@ -516,7 +579,6 @@
                            +document.getElementById('remXP3').value*400 + +document.getElementById('remXP4').value*200);
             const remCash = +document.getElementById('remCash').value;
             
-            // 檢查儲備
             let warning = '';
             if (remXP < reservedExp) warning += `⚠️ 現有經驗儲備不足 (缺 ${(reservedExp-remXP).toLocaleString()})\n`;
             if (remCash < reservedCash) warning += `⚠️ 現有龍門幣儲備不足 (缺 ${(reservedCash-remCash).toLocaleString()})\n`;
@@ -571,7 +633,7 @@
             reserveDisplay.textContent = '目前儲備：經驗 0　龍門幣 0';
         });
 
-        // ---------- 抽數計算 ----------
+        // ========== 原有抽數計算 ==========
         document.getElementById('calcPullsBtn').addEventListener('click', ()=>{
             const orundum = +document.getElementById('orundum').value;
             const ten = +document.getElementById('tenPermits').value;
@@ -589,12 +651,133 @@
             document.getElementById('pullsResult').textContent = '';
         });
 
-        // 全域鍵盤快捷鍵 (Ctrl+數字切換分頁)
+        // ========== 新增：終末地抽卡模擬 UI ==========
+        const efStartBtn = document.getElementById('startEfSimBtn');
+        const efQueryBtn = document.getElementById('efQueryBtn');
+        const efProgress = document.getElementById('efProgress');
+        const efResultDiv = document.getElementById('efResult');
+        let efSortedList = [], efOList = [];
+
+        function resetEndfield() {
+            document.getElementById('efTarget').value = 1;
+            document.getElementById('efSimTimes').value = 10000;
+            efResultDiv.textContent = '未開始模擬，請設定參數後撳「開始模擬」。';
+            efProgress.value = 0;
+            efSortedList = [];
+            efOList = [];
+            efQueryBtn.disabled = true;
+        }
+        document.getElementById('resetEfBtn').addEventListener('click', resetEndfield);
+
+        efStartBtn.addEventListener('click', async () => {
+            const target = parseInt(document.getElementById('efTarget').value) || 1;
+            const times = parseInt(document.getElementById('efSimTimes').value) || 10000;
+            if (times <= 0) { alert('模擬次數要大過 0'); return; }
+            if (target <= 0) { alert('目標數量最少要 1'); return; }
+
+            efStartBtn.disabled = true;
+            efQueryBtn.disabled = true;
+            efResultDiv.textContent = '計緊數，請等等...';
+            efProgress.value = 0;
+            efSortedList = [];
+            efOList = [];
+
+            const chunkSize = 500;
+            let results = [];
+            function runEfSimulation(startIdx) {
+                const end = Math.min(startIdx + chunkSize, times);
+                for (let i = startIdx; i < end; i++) {
+                    results.push(endfield_total_gacha(target));
+                }
+                efProgress.value = (end / times) * 100;
+                if (end < times) {
+                    setTimeout(() => runEfSimulation(end), 10);
+                } else {
+                    results.sort((a,b)=>a-b);
+                    efSortedList = results;
+                    const n = efSortedList.length;
+                    if (n === 0) {
+                        efResultDiv.textContent = '模擬結果出錯，請再試一次。';
+                        efStartBtn.disabled = false;
+                        return;
+                    }
+                    const maxVal = efSortedList[n-1];
+                    efOList = new Array(maxVal).fill(0);
+                    efSortedList.forEach(v => efOList[v-1]++);
+
+                    const quantiles = [10,20,30,40,50,60,70,80,90,100];
+                    const quantVals = quantiles.map(q => efSortedList[Math.floor(q/100 * n) - 1] || efSortedList[0]);
+                    const mean = efSortedList.reduce((a,b)=>a+b,0)/n;
+                    const variance = efSortedList.reduce((s,x)=> s + (x-mean)**2, 0)/(n-1);
+                    const sd = Math.sqrt(variance);
+                    const cv = sd/mean;
+                    const ci99 = 2.58 * sd / Math.sqrt(n);
+                    const ci9999 = 3.72 * sd / Math.sqrt(n);
+
+                    let out = `目標數量: ${target}\n`;
+                    out += `總模擬次數: ${n}\n`;
+                    out += `平均所需抽數: ${mean.toFixed(2)}\n`;
+                    out += `中位數: ${quantVals[4].toFixed(2)}\n`;
+                    out += `標準差: ${sd.toFixed(2)}\n`;
+                    out += `變異係數: ${cv.toFixed(2)}\n`;
+                    out += `十分位數: ${quantVals.join(', ')}\n`;
+                    out += `99% 信賴區間: ${mean.toFixed(2)} ± ${ci99.toFixed(2)}\n`;
+                    out += `99.99% 信賴區間: ${mean.toFixed(2)} ± ${ci9999.toFixed(2)}\n`;
+                    out += `==================================================`;
+                    efResultDiv.textContent = out;
+                    efStartBtn.disabled = false;
+                    efQueryBtn.disabled = false;
+                }
+            }
+            runEfSimulation(0);
+        });
+
+        efQueryBtn.addEventListener('click', () => {
+            if (!efSortedList.length) { alert('請先做一次模擬。'); return; }
+            const queryWin = document.createElement('div');
+            queryWin.style.position='fixed'; queryWin.style.top='30%'; queryWin.style.left='35%';
+            queryWin.style.background='#1e2533'; queryWin.style.padding='24px'; queryWin.style.borderRadius='20px';
+            queryWin.style.width='400px'; queryWin.style.zIndex='1000'; queryWin.style.boxShadow='0 0 30px black';
+            queryWin.innerHTML = `
+                <h3>🔎 終末地查詢工具</h3>
+                <div style="margin:15px 0;"><label>抽數 → 成功率</label><br>
+                    <input id="efQPull" type="number" placeholder="輸入抽數" style="width:100%">
+                    <button id="efCalcProbBtn">計算</button> <span id="efProbResult"></span>
+                </div>
+                <div><label>成功率 (%) → 所需抽數</label><br>
+                    <input id="efQProb" type="number" step="0.1" placeholder="例如 90" style="width:100%">
+                    <button id="efCalcPullBtn">計算</button> <span id="efPullResult"></span>
+                </div>
+                <button id="efCloseQuery" style="margin-top:20px;">關閉</button>
+            `;
+            document.body.appendChild(queryWin);
+            document.getElementById('efCalcProbBtn').addEventListener('click', ()=>{
+                const q = parseInt(document.getElementById('efQPull').value);
+                if (isNaN(q) || q<=0 || q>efOList.length) document.getElementById('efProbResult').textContent='抽數超出範圍';
+                else {
+                    const cum = efOList.slice(0,q).reduce((a,b)=>a+b,0);
+                    const prob = cum / efSortedList.length * 100;
+                    document.getElementById('efProbResult').textContent = `成功率: ${prob.toFixed(2)}%`;
+                }
+            });
+            document.getElementById('efCalcPullBtn').addEventListener('click', ()=>{
+                const p = parseFloat(document.getElementById('efQProb').value);
+                if (isNaN(p) || p<=0 || p>100) document.getElementById('efPullResult').textContent='百分比要喺 0~100 之間';
+                else {
+                    const idx = Math.floor(p/100 * efSortedList.length) - 1;
+                    document.getElementById('efPullResult').textContent = `至少需要: ${efSortedList[Math.max(0,idx)]} 抽`;
+                }
+            });
+            document.getElementById('efCloseQuery').addEventListener('click', ()=> queryWin.remove());
+        });
+
+        // 鍵盤快捷鍵 (Ctrl+數字) 支援新分頁
         window.addEventListener('keydown', (e)=>{
             if (e.ctrlKey) {
                 if (e.key === '1') document.querySelector('[data-tab="gacha"]').click();
                 else if (e.key === '2') document.querySelector('[data-tab="resource"]').click();
                 else if (e.key === '3') document.querySelector('[data-tab="pulls"]').click();
+                else if (e.key === '4') document.querySelector('[data-tab="endfield"]').click();
             }
         });
     })();
