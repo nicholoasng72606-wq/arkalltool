@@ -216,11 +216,26 @@
         <h3>🔒 設定資源儲備</h3>
         <label>升級路線（同上）</label>
         <textarea id="modalUpgrade" rows="5" style="width:100%"></textarea>
-        <div style="display:flex; gap:15px; margin:15px 0;">
-            <div>⭐4: 1級<input id="mm4L1" value="0" style="width:60px;"> 2級<input id="mm4L2" value="0" style="width:60px;"> 3級<input id="mm4L3" value="0" style="width:60px;"></div>
-            <div>⭐5: 1級<input id="mm5L1" value="0" style="width:60px;"> 2級<input id="mm5L2" value="0" style="width:60px;"> 3級<input id="mm5L3" value="0" style="width:60px;"></div>
-            <div>⭐6: 1級<input id="mm6L1" value="0" style="width:60px;"> 2級<input id="mm6L2" value="0" style="width:60px;"> 3級<input id="mm6L3" value="0" style="width:60px;"></div>
-        </div>
+        <div style="display: flex; gap: 24px; flex-wrap: wrap; margin: 20px 0;">
+                <div class="module-card">
+                    <h4 style="margin:0 0 10px;">⭐4 模組升級</h4>
+                    0→1級 <input type="number" id="mm4L1" value="0" min="0" style="width:70px;"><br>
+                    1→2級 <input type="number" id="mm4L2" value="0" min="0" style="width:70px;"><br>
+                    2→3級 <input type="number" id="mm4L3" value="0" min="0" style="width:70px;">
+                </div>
+                <div class="module-card">
+                    <h4 style="margin:0 0 10px;">⭐5 模組升級</h4>
+                    0→1級 <input type="number" id="mm5L1" value="0" min="0" style="width:70px;"><br>
+                    1→2級 <input type="number" id="mm5L2" value="0" min="0" style="width:70px;"><br>
+                    2→3級 <input type="number" id="mm5L3" value="0" min="0" style="width:70px;">
+                </div>
+                <div class="module-card">
+                    <h4 style="margin:0 0 10px;">⭐6 模組升級</h4>
+                    0→1級 <input type="number" id="mm6L1" value="0" min="0" style="width:70px;"><br>
+                    1→2級 <input type="number" id="mm6L2" value="0" min="0" style="width:70px;"><br>
+                    2→3級 <input type="number" id="mm6L3" value="0" min="0" style="width:70px;">
+                </div>
+            </div>
         <button id="computeReserveBtn">計算儲備需求</button>
         <span id="modalReserveResult" style="margin-left:20px;"></span>
         <div style="margin-top:20px; display:flex; gap:16px; justify-content:flex-end;">
