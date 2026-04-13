@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>明日方舟綜合工具 · 廣東話版</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; }
+        body {
+            margin: 0; padding: 20px;
+            background: #1a1e2a; color: #e3e9f2;
+            display: flex; justify-content: center;
+        }
+        .app-container {
+            max-width: 1200px; width: 100%;
+            background: #252b3d; border-radius: 24px;
+            padding: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+        }
+        h1 { margin: 0 0 16px; font-weight: 400; color: #b7c9e2; }
+        .tabs {
+            display: flex; gap: 6px; border-bottom: 2px solid #3a465e;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            background: #2f3a4f; border: none; color: #a6b8d9;
+            padding: 10px 24px; border-radius: 16px 16px 0 0;
+            font-size: 18px; font-weight: bold; cursor: pointer;
+            transition: 0.2s; border-bottom: 3px solid transparent;
+        }
+        .tab-btn.active {
+            background: #3f4d66; color: white;
+            border-bottom: 3px solid #7aaae0;
+        }
+        .tab-pane {
+            display: none; animation: fade 0.2s;
+        }
+        .tab-pane.active { display: block; }
+        @keyframes fade { from { opacity: 0.3; } to { opacity: 1; } }
+
+        .card {
+            background: #1e2533; border-radius: 20px;
+            padding: 18px; margin-bottom: 18px;
+            border: 1px solid #384259;
+        }
+        label { color: #bdcde0; font-weight: 500; }
+        input, .scrolled-area {
+            background: #0f141c; border: 1px solid #465672;
+            color: white; padding: 10px 12px; border-radius: 14px;
+            font-size: 15px;
+        }
+        input:focus { outline: 2px solid #5f8ec9; }
+        button {
+            background: #3f5e8c; border: none; color: white;
+            padding: 10px 22px; border-radius: 40px;
+            font-size: 16px; font-weight: bold; cursor: pointer;
+            border-bottom: 3px solid #1d314a; transition: 0.15s;
+        }
+        button:hover { background: #5179b3; transform: translateY(-1px); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; background: #3a4a62; }
+
+        .result-box {
+            background: #0f141c; border-radius: 18px;
+            padding: 16px; margin-top: 16px;
+            font-family: 'Consolas', monospace; font-size: 15px;
+            white-space: pre-wrap; border: 1px solid #465672;
+            max-height: 400px; overflow-y: auto;
+        }
+        progress {
+            width: 100%; height: 14px; border-radius: 20px;
+            accent-color: #6e9ed4;
+        }
+        .inline-group {
+            display: flex; flex-wrap: wrap; gap: 20px; align-items: center;
+        }
+        .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .module-card { background: #1b2230; border-radius: 16px; padding: 15px; }
+        .small-input { width: 90px; }
+        .badge { background: #2e405b; padding: 4px 12px; border-radius: 30px; }
+        a { color: #9ab9e6; }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <h1>⚔️ 羅德島後勤終端 · 抽卡模擬 + 資源規劃</h1>
+    
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="gacha">🎲 抽卡模擬器</button>
+        <button class="tab-btn" data-tab="resource">📦 資源需求計算</button>
+        <button class="tab-btn" data-tab="pulls">🧮 抽數計算</button>
+    </div>
+
+    <!-- 抽卡模擬器分頁 -->
+    <div id="gacha" class="tab-pane active">
+        <div class="card">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 12px;">
+                <div><label>常駐卡池數量：</label><br><input type="number" id="regNeed" value="0" min="0" step="1" class="small-input"></div>
+                <div><label>單目標限定池：</label><br><input type="number" id="olNeed" value="0" min="0" step="1" class="small-input"></div>
+                <div><label>雙目標限定池：</label><br><input type="number" id="tlNeed" value="0" min="0" step="1" class="small-input"></div>
+                <div><label>聯動卡池數量：</label><br><input type="number" id="coopNeed" value="0" min="0" step="1" class="small-input"></div>
+                <div><label>模擬次數：</label><br><input type="number" id="simTimes" value="10000" min="100" step="1000" class="small-input"></div>
+            </div>
+            <div style="margin-top: 20px; display: flex; gap: 16px; flex-wrap: wrap;">
+                <button id="startSimBtn">▶ 開始模擬</button>
+                <button id="queryBtn" disabled>🔍 查詢概率 / 所需抽數</button>
+                <button id="resetGachaBtn" style="background:#3f4d5e;">⟲ 重置</button>
+            </div>
+            <progress id="simProgress" value="0" max="100"></progress>
+            <div id="gachaResult" class="result-box">未開始模擬，請設定參數後撳「開始模擬」。</div>
+        </div>
+    </div>
+
+    <!-- 資源需求計算分頁 -->
+    <div id="resource" class="tab-pane">
+        <div class="card">
+            <label>📋 升級路線（每行一個：星級 起始等級 結束等級 數量）</label>
+            <textarea id="upgradeInput" rows="5" style="width:100%; font-family: monospace;" placeholder="例：5 230 260 1
+6 1 290 3">5 230 260 1
+6 1 290 1</textarea>
+            <p style="color:#a0b5d0; margin:4px 0;">* 接受01，230，240...280，290。01 = 精0 1級</p>
+
+            <div style="display: flex; gap: 24px; flex-wrap: wrap; margin: 20px 0;">
+                <div class="module-card">
+                    <h4 style="margin:0 0 10px;">⭐4 模組升級</h4>
+                    0→1級 <input type="number" id="m4L1" value="0" min="0" style="width:70px;"><br>
+                    1→2級 <input type="number" id="m4L2" value="0" min="0" style="width:70px;"><br>
+                    2→3級 <input type="number" id="m4L3" value="0" min="0" style="width:70px;">
+                </div>
+                <div class="module-card">
+                    <h4 style="margin:0 0 10px;">⭐5 模組升級</h4>
+                    0→1級 <input type="number" id="m5L1" value="0" min="0" style="width:70px;"><br>
+                    1→2級 <input type="number" id="m5L2" value="0" min="0" style="width:70px;"><br>
+                    2→3級 <input type="number" id="m5L3" value="0" min="0" style="width:70px;">
+                </div>
+                <div class="module-card">
+                    <h4 style="margin:0 0 10px;">⭐6 模組升級</h4>
+                    0→1級 <input type="number" id="m6L1" value="0" min="0" style="width:70px;"><br>
+                    1→2級 <input type="number" id="m6L2" value="0" min="0" style="width:70px;"><br>
+                    2→3級 <input type="number" id="m6L3" value="0" min="0" style="width:70px;">
+                </div>
+            </div>
+
+            <label>💰 剩餘資源</label>
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                經驗卡 (2000/1000/400/200): 
+                <input type="number" id="remXP1" value="0" style="width:70px;" placeholder="2000">
+                <input type="number" id="remXP2" value="0" style="width:70px;" placeholder="1000">
+                <input type="number" id="remXP3" value="0" style="width:70px;" placeholder="400">
+                <input type="number" id="remXP4" value="0" style="width:70px;" placeholder="200">
+                &nbsp;&nbsp; 龍門幣: <input type="number" id="remCash" value="0" style="width:100px;">
+            </div>
+
+            <div style="margin-top:18px;">
+                <label>📊 每日基建產出</label>
+                <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                    經驗: <input type="number" id="dailyXP" value="0" style="width:100px;">
+                    龍門幣: <input type="number" id="dailyCash" value="0" style="width:100px;">
+                    體力: <input type="number" id="dailyEnergy" value="240" style="width:100px;">
+                </div>
+                <label style="margin-left:20px;">
+                    <input type="checkbox" id="includeMission"> 計埋任務獎勵
+                </label>
+            </div>
+
+            <div style="margin: 20px 0; display: flex; gap: 16px; align-items: center;">
+                <button id="setReserveBtn">⚙️ 設定資源儲備</button>
+                <span id="reserveDisplay" style="color:#9fc5ff;">目前儲備：經驗 0　龍門幣 0</span>
+            </div>
+
+            <div style="display: flex; gap: 20px;">
+                <button id="calcResourceBtn">📐 計數</button>
+                <button id="resetResourceBtn" style="background:#3f4d5e;">⟲ 重置</button>
+            </div>
+            <div id="resourceResult" class="result-box"></div>
+        </div>
+    </div>
+
+    <!-- 抽數計算分頁 -->
+    <div id="pulls" class="tab-pane">
+        <div class="card">
+            <div style="display: grid; gap: 16px; max-width: 500px;">
+                <div><label>💎 合成玉數量：</label> <input type="number" id="orundum" value="0" min="0" style="width:150px;"></div>
+                <div><label>🎫 十抽卷數量：</label> <input type="number" id="tenPermits" value="0" min="0" style="width:150px;"></div>
+                <div><label>🎟️ 單抽卷數量：</label> <input type="number" id="permits" value="0" min="0" style="width:150px;"></div>
+                <div><label>🔶 源石數量：</label> <input type="number" id="originite" value="0" min="0" style="width:150px;"></div>
+            </div>
+            <div style="margin-top: 30px;">
+                <button id="calcPullsBtn">🧮 計數</button>
+                <button id="resetPullsBtn" style="background:#3f4d5e; margin-left:16px;">⟲ 重置</button>
+            </div>
+            <div id="pullsResult" class="result-box" style="margin-top:20px; font-size:20px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 資源儲備彈窗 (隱藏) -->
+<div id="reserveModal" style="display:none; position:fixed; top:0;left:0;width:100%;height:100%; background:rgba(0,0,0,0.7); align-items:center; justify-content:center;">
+    <div style="background:#252b3d; padding:24px; border-radius:28px; width:700px; max-width:90%;">
+        <h3>🔒 設定資源儲備</h3>
+        <label>升級路線（同上）</label>
+        <textarea id="modalUpgrade" rows="5" style="width:100%"></textarea>
+        <div style="display:flex; gap:15px; margin:15px 0;">
+            <div>⭐4: 1級<input id="mm4L1" value="0" style="width:60px;"> 2級<input id="mm4L2" value="0" style="width:60px;"> 3級<input id="mm4L3" value="0" style="width:60px;"></div>
+            <div>⭐5: 1級<input id="mm5L1" value="0" style="width:60px;"> 2級<input id="mm5L2" value="0" style="width:60px;"> 3級<input id="mm5L3" value="0" style="width:60px;"></div>
+            <div>⭐6: 1級<input id="mm6L1" value="0" style="width:60px;"> 2級<input id="mm6L2" value="0" style="width:60px;"> 3級<input id="mm6L3" value="0" style="width:60px;"></div>
+        </div>
+        <button id="computeReserveBtn">計算儲備需求</button>
+        <span id="modalReserveResult" style="margin-left:20px;"></span>
+        <div style="margin-top:20px; display:flex; gap:16px; justify-content:flex-end;">
+            <button id="applyReserveBtn" style="background:#3f8c5e;">套用並關閉</button>
+            <button id="closeModalBtn" style="background:#5a4a4a;">取消</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        "use strict";
+
+        // ---------- 核心抽卡邏輯 (移植自Python) ----------
+        function six(sixProbi) {
+            return Math.floor(Math.random() * 1000) + 1 <= sixProbi * 1000;
+        }
+        function gacha() {
+            let sixed = false;
+            let sixProbi = 0.02;
+            let gachaNumber = 0;
+            for (let i = 1; i <= 50; i++) {
+                gachaNumber++;
+                if (six(sixProbi)) { sixed = true; break; }
+            }
+            if (!sixed) {
+                for (let j = 51; j < 100; j++) {
+                    sixProbi = 0.02 + 0.02 * (j - 50);
+                    gachaNumber++;
+                    if (six(sixProbi)) break;
+                }
+            }
+            return gachaNumber;
+        }
+        function r_gacha() {
+            let gachaNumber = 0;
+            while (true) {
+                gachaNumber += gacha();
+                if (gachaNumber >= 150) return gachaNumber;
+                if (Math.random() < 0.5) return gachaNumber;
+            }
+        }
+        function ol_gacha() {
+            let gachaNumber = 0;
+            while (true) {
+                gachaNumber += gacha();
+                if (gachaNumber >= 300) return 300;
+                if (Math.floor(Math.random() * 100) + 1 <= 35) return gachaNumber;
+            }
+        }
+        function tl_gacha() {
+            let gachaNumber = 0, get = 0;
+            while (get < 2) {
+                gachaNumber += gacha();
+                if (gachaNumber >= 300) return 300;
+                if (get === 0 && Math.floor(Math.random()*100)+1 <= 70) get++;
+                else if (get === 1 && Math.floor(Math.random()*100)+1 <= 35) return gachaNumber;
+            }
+        }
+        function coop_gacha() {
+            let gachaNumber = 0;
+            while (true) {
+                gachaNumber += gacha();
+                if (gachaNumber >= 120) return 120;
+                if (Math.random() < 0.5) return gachaNumber;
+            }
+        }
+        function total_gacha(reg, ol, tl, coop) {
+            let total = 0;
+            for (let i=0; i<reg; i++) total += r_gacha();
+            for (let i=0; i<ol; i++) total += ol_gacha();
+            for (let i=0; i<tl; i++) total += tl_gacha();
+            for (let i=0; i<coop; i++) total += coop_gacha();
+            return total;
+        }
+
+        // 資源計算常數
+        const module4 = [20000,20000,30000], module5 = [40000,50000,60000], module6 = [80000,100000,120000];
+        const uxp = [41715,58025,76125,106914,161200,255000];
+        const uc = [29389,46048,67255,104194,171616,297577];
+        const exp = [201211,290411,412411];
+        const ec = [235117,400823,618717];
+
+        // ---------- 輔助函數 ----------
+        function parseUpgradeLines(text) {
+            const lines = text.trim().split('\n');
+            const result = [];
+            for (let line of lines) {
+                const parts = line.trim().split(/\s+/);
+                if (parts.length === 4) {
+                    const star = parseInt(parts[0]), beg = parseInt(parts[1]), end = parseInt(parts[2]), count = parseInt(parts[3]);
+                    if (!isNaN(star) && !isNaN(beg) && !isNaN(end) && !isNaN(count))
+                        result.push([star, beg, end, count]);
+                }
+            }
+            return result;
+        }
+
+        function calcModuleCost(m4, m5, m6) {
+            let m4cost = 0, m5cost = 0, m6cost = 0;
+            if (m4[0]!==0) m4cost = m4[1]*module4[0] + m4[2]*module4[1] + m4[3]*module4[2];
+            if (m5[0]!==0) m5cost = m5[1]*module5[0] + m5[2]*module5[1] + m5[3]*module5[2];
+            if (m6[0]!==0) m6cost = m6[1]*module6[0] + m6[2]*module6[1] + m6[3]*module6[2];
+            return m4cost + m5cost + m6cost;
+        }
+
+        function calcTotalRequirements(upgradeLines, m4, m5, m6) {
+            let ecount = [0,0,0];
+            let count = [0,0,0,0,0,0];
+            for (let line of upgradeLines) {
+                const star = line[0], beg = line[1], end = line[2], n = line[3];
+                let b = beg;
+                if (b === 1) { ecount[star-4] += n; b = 230; }
+                const long = (end - b) / 10;
+                const short = (b - 230) / 10;
+                for (let i=0; i<long; i++) count[i] += n;
+                for (let i=0; i<short; i++) count[i] -= n;
+            }
+            let expNeeded = ecount.reduce((s,v,i)=> s + v*exp[i], 0);
+            let cashNeededEC = ecount.reduce((s,v,i)=> s + v*ec[i], 0);
+            expNeeded += count.reduce((s,v,i)=> s + v*uxp[i], 0);
+            let cashNeededUC = count.reduce((s,v,i)=> s + v*uc[i], 0);
+            const moduleCash = calcModuleCost(m4, m5, m6);
+            return { exp: expNeeded, cash: cashNeededEC + cashNeededUC + moduleCash };
+        }
+
+        // ---------- 分頁切換 ----------
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+                document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab).classList.add('active');
+            });
+        });
+
+        // ---------- 抽卡模擬器 UI ----------
+        const startBtn = document.getElementById('startSimBtn');
+        const queryBtn = document.getElementById('queryBtn');
+        const progress = document.getElementById('simProgress');
+        const resultDiv = document.getElementById('gachaResult');
+        let sortedList = [], oList = [];
+
+        function resetGacha() {
+            document.getElementById('regNeed').value = 0;
+            document.getElementById('olNeed').value = 0;
+            document.getElementById('tlNeed').value = 0;
+            document.getElementById('coopNeed').value = 0;
+            document.getElementById('simTimes').value = 10000;
+            resultDiv.textContent = '未開始模擬，請設定參數後撳「開始模擬」。';
+            progress.value = 0;
+            sortedList = []; oList = [];
+            queryBtn.disabled = true;
+        }
+        document.getElementById('resetGachaBtn').addEventListener('click', resetGacha);
+
+        startBtn.addEventListener('click', async () => {
+            const reg = parseInt(document.getElementById('regNeed').value) || 0;
+            const ol = parseInt(document.getElementById('olNeed').value) || 0;
+            const tl = parseInt(document.getElementById('tlNeed').value) || 0;
+            const coop = parseInt(document.getElementById('coopNeed').value) || 0;
+            const times = parseInt(document.getElementById('simTimes').value) || 10000;
+            if (times <= 0) { alert('模擬次數要大過 0'); return; }
+
+            startBtn.disabled = true;
+            queryBtn.disabled = true;
+            resultDiv.textContent = '計緊數，請等等...';
+            progress.value = 0;
+            sortedList = []; oList = [];
+
+            // 使用 setTimeout 分塊模擬，避免阻塞UI
+            const chunkSize = 500;
+            let results = [];
+            function runSimulationChunk(startIdx) {
+                const end = Math.min(startIdx + chunkSize, times);
+                for (let i=startIdx; i<end; i++) {
+                    results.push(total_gacha(reg, ol, tl, coop));
+                }
+                progress.value = (end / times) * 100;
+                if (end < times) {
+                    setTimeout(() => runSimulationChunk(end), 10);
+                } else {
+                    // 完成
+                    results.sort((a,b)=>a-b);
+                    sortedList = results;
+                    const n = sortedList.length;
+                    if (n===0) {
+                        resultDiv.textContent = '模擬結果：所有抽數為 0（請檢查係咪設定咗最少一個卡池目標）';
+                        startBtn.disabled = false;
+                        return;
+                    }
+                    const maxVal = sortedList[n-1];
+                    oList = new Array(maxVal).fill(0);
+                    sortedList.forEach(v => oList[v-1]++);
+                    
+                    const quantiles = [10,20,30,40,50,60,70,80,90,100];
+                    const quantVals = quantiles.map(q => sortedList[Math.floor(q/100 * n) - 1] || sortedList[0]);
+                    const mean = sortedList.reduce((a,b)=>a+b,0)/n;
+                    const variance = sortedList.reduce((s,x)=> s + (x-mean)**2, 0)/(n-1);
+                    const sd = Math.sqrt(variance);
+                    const cv = sd/mean;
+                    const ci99 = 2.58 * sd / Math.sqrt(n);
+                    const ci9999 = 3.72 * sd / Math.sqrt(n);
+                    
+                    let out = `總模擬次數: ${n}\n`;
+                    out += `平均所需抽數: ${mean.toFixed(2)}\n`;
+                    out += `中位數: ${quantVals[4].toFixed(2)}\n`;
+                    out += `標準差: ${sd.toFixed(2)}\n`;
+                    out += `變異係數: ${cv.toFixed(2)}\n`;
+                    out += `十分位數: ${quantVals.join(', ')}\n`;
+                    out += `99% 信賴區間: ${mean.toFixed(2)} ± ${ci99.toFixed(2)}\n`;
+                    out += `99.99% 信賴區間: ${mean.toFixed(2)} ± ${ci9999.toFixed(2)}\n`;
+                    out += `==================================================`;
+                    resultDiv.textContent = out;
+                    startBtn.disabled = false;
+                    queryBtn.disabled = false;
+                }
+            }
+            runSimulationChunk(0);
+        });
+
+        queryBtn.addEventListener('click', () => {
+            if (!sortedList.length) { alert('請先做一次模擬。'); return; }
+            const queryWin = document.createElement('div');
+            queryWin.style.position='fixed'; queryWin.style.top='30%'; queryWin.style.left='35%';
+            queryWin.style.background='#1e2533'; queryWin.style.padding='24px'; queryWin.style.borderRadius='20px';
+            queryWin.style.width='400px'; queryWin.style.zIndex='1000'; queryWin.style.boxShadow='0 0 30px black';
+            queryWin.innerHTML = `
+                <h3>🔎 查詢工具</h3>
+                <div style="margin:15px 0;"><label>抽數 → 成功率</label><br>
+                    <input id="qPull" type="number" placeholder="輸入抽數" style="width:100%">
+                    <button id="calcProbBtn">計算</button> <span id="probResult"></span>
+                </div>
+                <div><label>成功率 (%) → 所需抽數</label><br>
+                    <input id="qProb" type="number" step="0.1" placeholder="例如 90" style="width:100%">
+                    <button id="calcPullBtn">計算</button> <span id="pullResult"></span>
+                </div>
+                <button id="closeQuery" style="margin-top:20px;">關閉</button>
+            `;
+            document.body.appendChild(queryWin);
+            document.getElementById('calcProbBtn').addEventListener('click', ()=>{
+                const q = parseInt(document.getElementById('qPull').value);
+                if (isNaN(q) || q<=0 || q>oList.length) document.getElementById('probResult').textContent='抽數超出範圍';
+                else {
+                    const cum = oList.slice(0,q).reduce((a,b)=>a+b,0);
+                    const prob = cum / sortedList.length * 100;
+                    document.getElementById('probResult').textContent = `成功率: ${prob.toFixed(2)}%`;
+                }
+            });
+            document.getElementById('calcPullBtn').addEventListener('click', ()=>{
+                const p = parseFloat(document.getElementById('qProb').value);
+                if (isNaN(p) || p<=0 || p>100) document.getElementById('pullResult').textContent='百分比要喺 0~100 之間';
+                else {
+                    const idx = Math.floor(p/100 * sortedList.length) - 1;
+                    document.getElementById('pullResult').textContent = `至少需要: ${sortedList[Math.max(0,idx)]} 抽`;
+                }
+            });
+            document.getElementById('closeQuery').addEventListener('click', ()=> queryWin.remove());
+        });
+
+        // ---------- 資源計算器 ----------
+        let reservedExp = 0, reservedCash = 0;
+        const reserveDisplay = document.getElementById('reserveDisplay');
+        const modal = document.getElementById('reserveModal');
+        
+        document.getElementById('setReserveBtn').addEventListener('click', ()=>{
+            modal.style.display = 'flex';
+            // 複製主頁面輸入到modal
+            document.getElementById('modalUpgrade').value = document.getElementById('upgradeInput').value;
+            ['m4','m5','m6'].forEach((s,idx)=>{
+                const star = ['4','5','6'][idx];
+                for(let lvl=1;lvl<=3;lvl++){
+                    document.getElementById(`mm${star}L${lvl}`).value = document.getElementById(`m${star}L${lvl}`).value;
+                }
+            });
+            document.getElementById('modalReserveResult').textContent = '';
+        });
+        document.getElementById('closeModalBtn').addEventListener('click', ()=> modal.style.display='none');
+        document.getElementById('computeReserveBtn').addEventListener('click', ()=>{
+            const lines = parseUpgradeLines(document.getElementById('modalUpgrade').value);
+            const m4 = [ (document.getElementById('mm4L1').value!='0'||document.getElementById('mm4L2').value!='0'||document.getElementById('mm4L3').value!='0')?1:0,
+                         +document.getElementById('mm4L1').value, +document.getElementById('mm4L2').value, +document.getElementById('mm4L3').value ];
+            const m5 = [ (document.getElementById('mm5L1').value!='0'||document.getElementById('mm5L2').value!='0'||document.getElementById('mm5L3').value!='0')?1:0,
+                         +document.getElementById('mm5L1').value, +document.getElementById('mm5L2').value, +document.getElementById('mm5L3').value ];
+            const m6 = [ (document.getElementById('mm6L1').value!='0'||document.getElementById('mm6L2').value!='0'||document.getElementById('mm6L3').value!='0')?1:0,
+                         +document.getElementById('mm6L1').value, +document.getElementById('mm6L2').value, +document.getElementById('mm6L3').value ];
+            const req = calcTotalRequirements(lines, m4, m5, m6);
+            document.getElementById('modalReserveResult').textContent = `需求經驗儲備：${req.exp.toLocaleString()}　龍門幣：${req.cash.toLocaleString()}`;
+            modal._tempReserve = req;
+        });
+        document.getElementById('applyReserveBtn').addEventListener('click', ()=>{
+            if (modal._tempReserve) {
+                reservedExp = modal._tempReserve.exp;
+                reservedCash = modal._tempReserve.cash;
+                reserveDisplay.textContent = `目前儲備：經驗 ${reservedExp.toLocaleString()}　龍門幣 ${reservedCash.toLocaleString()}`;
+            }
+            modal.style.display = 'none';
+        });
+
+        document.getElementById('calcResourceBtn').addEventListener('click', ()=>{
+            const lines = parseUpgradeLines(document.getElementById('upgradeInput').value);
+            const m4 = [ (document.getElementById('m4L1').value!='0'||document.getElementById('m4L2').value!='0'||document.getElementById('m4L3').value!='0')?1:0,
+                         +document.getElementById('m4L1').value, +document.getElementById('m4L2').value, +document.getElementById('m4L3').value ];
+            const m5 = [ (document.getElementById('m5L1').value!='0'||document.getElementById('m5L2').value!='0'||document.getElementById('m5L3').value!='0')?1:0,
+                         +document.getElementById('m5L1').value, +document.getElementById('m5L2').value, +document.getElementById('m5L3').value ];
+            const m6 = [ (document.getElementById('m6L1').value!='0'||document.getElementById('m6L2').value!='0'||document.getElementById('m6L3').value!='0')?1:0,
+                         +document.getElementById('m6L1').value, +document.getElementById('m6L2').value, +document.getElementById('m6L3').value ];
+            const {exp: totalExp, cash: totalCash} = calcTotalRequirements(lines, m4, m5, m6);
+            
+            const remXP = (+document.getElementById('remXP1').value*2000 + +document.getElementById('remXP2').value*1000 +
+                           +document.getElementById('remXP3').value*400 + +document.getElementById('remXP4').value*200);
+            const remCash = +document.getElementById('remCash').value;
+            
+            // 檢查儲備
+            let warning = '';
+            if (remXP < reservedExp) warning += `⚠️ 現有經驗儲備不足 (缺 ${(reservedExp-remXP).toLocaleString()})\n`;
+            if (remCash < reservedCash) warning += `⚠️ 現有龍門幣儲備不足 (缺 ${(reservedCash-remCash).toLocaleString()})\n`;
+            if (warning) {
+                document.getElementById('resourceResult').textContent = warning + '請盡快補充資源！';
+                return;
+            }
+            
+            let needExp = totalExp - (remXP - reservedExp);
+            let needCash = totalCash - (remCash - reservedCash);
+            if (needExp < 0) needExp = 0;
+            if (needCash < 0) needCash = 0;
+            
+            let dailyXP = +document.getElementById('dailyXP').value;
+            let dailyCash = +document.getElementById('dailyCash').value;
+            const energy = +document.getElementById('dailyEnergy').value;
+            if (document.getElementById('includeMission').checked) {
+                dailyXP += 9600 + 24400/7;
+                dailyCash += 9500 + 23000/7;
+            }
+            const baseDays = Math.max( dailyXP>0 ? Math.ceil(needExp/dailyXP) : 0,
+                                       dailyCash>0 ? Math.ceil(needCash/dailyCash) : 0 );
+            const energyToRes = (energy/36)*10000;
+            const mixDaysXP = (dailyXP+energyToRes)>0 ? Math.ceil(needExp/(dailyXP+energyToRes)) : 0;
+            const mixDaysCash = (dailyCash+energyToRes)>0 ? Math.ceil(needCash/(dailyCash+energyToRes)) : 0;
+            let mixDays = Math.max(mixDaysXP, mixDaysCash);
+            if (baseDays < mixDays) mixDays = baseDays;
+            const totalRes = needExp+needCash;
+            const dailyTotal = dailyXP+dailyCash+energyToRes;
+            if (dailyTotal>0) {
+                const mixDaysTotal = Math.ceil(totalRes/dailyTotal);
+                mixDays = Math.min(mixDays, mixDaysTotal);
+            }
+            
+            let out = `需要經驗總量：${needExp.toLocaleString()}\n需要龍門幣總量：${needCash.toLocaleString()}\n`;
+            out += `淨係靠基建產出需要：${baseDays} 日\n基建 + 體力刷圖需要：${mixDays} 日`;
+            if (reservedExp>0||reservedCash>0) out += `\n\n(已扣除資源儲備：經驗 ${reservedExp.toLocaleString()}，龍門幣 ${reservedCash.toLocaleString()})`;
+            document.getElementById('resourceResult').textContent = out;
+        });
+
+        document.getElementById('resetResourceBtn').addEventListener('click', ()=>{
+            document.getElementById('upgradeInput').value = '5 230 260 1\n6 1 290 1';
+            ['m4','m5','m6'].forEach(s=>{ for(let i=1;i<=3;i++) document.getElementById(s+'L'+i).value=0; });
+            document.getElementById('remXP1').value=0;document.getElementById('remXP2').value=0;
+            document.getElementById('remXP3').value=0;document.getElementById('remXP4').value=0;
+            document.getElementById('remCash').value=0;
+            document.getElementById('dailyXP').value=0; document.getElementById('dailyCash').value=0;
+            document.getElementById('dailyEnergy').value=240;
+            document.getElementById('includeMission').checked = false;
+            document.getElementById('resourceResult').textContent = '';
+            reservedExp = reservedCash = 0;
+            reserveDisplay.textContent = '目前儲備：經驗 0　龍門幣 0';
+        });
+
+        // ---------- 抽數計算 ----------
+        document.getElementById('calcPullsBtn').addEventListener('click', ()=>{
+            const orundum = +document.getElementById('orundum').value;
+            const ten = +document.getElementById('tenPermits').value;
+            const single = +document.getElementById('permits').value;
+            const op = +document.getElementById('originite').value;
+            const pOnly = ten*10 + single;
+            const pullFromOrundum = Math.floor(orundum/600);
+            const pullFromOp = Math.floor((180*op + orundum)/600);
+            document.getElementById('pullsResult').textContent = 
+                `淨係用抽卡券&合成玉：${pOnly + pullFromOrundum} 抽\n使用所有抽卡資源：${pOnly + pullFromOp} 抽`;
+        });
+        document.getElementById('resetPullsBtn').addEventListener('click', ()=>{
+            document.getElementById('orundum').value=0; document.getElementById('tenPermits').value=0;
+            document.getElementById('permits').value=0; document.getElementById('originite').value=0;
+            document.getElementById('pullsResult').textContent = '';
+        });
+
+        // 全域鍵盤快捷鍵 (Ctrl+數字切換分頁)
+        window.addEventListener('keydown', (e)=>{
+            if (e.ctrlKey) {
+                if (e.key === '1') document.querySelector('[data-tab="gacha"]').click();
+                else if (e.key === '2') document.querySelector('[data-tab="resource"]').click();
+                else if (e.key === '3') document.querySelector('[data-tab="pulls"]').click();
+            }
+        });
+    })();
+</script>
+</body>
+</html>
