@@ -103,6 +103,7 @@
             <div style="margin-top: 20px; display: flex; gap: 16px; flex-wrap: wrap;">
                 <button id="startSimBtn">▶ 開始模擬</button>
                 <button id="queryBtn" disabled>🔍 查詢概率 / 所需抽數</button>
+                <button id="copyMatlabBtn" disabled>📋 複製 MATLAB 代碼</button>
                 <button id="resetGachaBtn" style="background:#3f4d5e;">⟲ 重置</button>
             </div>
             <progress id="simProgress" value="0" max="100"></progress>
@@ -117,7 +118,7 @@
             <textarea id="upgradeInput" rows="5" style="width:100%; font-family: monospace;" placeholder="例：5 230 260 1
 6 01 290 3">5 230 260 1
 6 01 290 1</textarea>
-            <p style="color:#a0b5d0; margin:4px 0;">* 接受01，230，240，...，280，290。01 = 精0 1級；260 = 精2 60級</p>
+            <p style="color:#a0b5d0; margin:4px 0;">* 接受01，230，240...280，290。01 = 精0 1級</p>
 
             <div style="display: flex; gap: 24px; flex-wrap: wrap; margin: 20px 0;">
                 <div class="module-card">
@@ -143,11 +144,11 @@
             <label>💰 剩餘資源</label>
             <div style="display:flex; gap:12px; flex-wrap:wrap;">
                 經驗卡 (2000/1000/400/200): 
-                <input type="number" id="remXP1" value="0" style="width:100px;" placeholder="2000">
-                <input type="number" id="remXP2" value="0" style="width:100px;" placeholder="1000">
-                <input type="number" id="remXP3" value="0" style="width:100px;" placeholder="400">
-                <input type="number" id="remXP4" value="0" style="width:100px;" placeholder="200">
-                &nbsp;&nbsp; 龍門幣: <input type="number" id="remCash" value="0" style="width:120px;">
+                <input type="number" id="remXP1" value="0" style="width:70px;" placeholder="2000">
+                <input type="number" id="remXP2" value="0" style="width:70px;" placeholder="1000">
+                <input type="number" id="remXP3" value="0" style="width:70px;" placeholder="400">
+                <input type="number" id="remXP4" value="0" style="width:70px;" placeholder="200">
+                &nbsp;&nbsp; 龍門幣: <input type="number" id="remCash" value="0" style="width:100px;">
             </div>
 
             <div style="margin-top:18px;">
@@ -202,6 +203,7 @@
             <div style="margin-top: 20px; display: flex; gap: 16px; flex-wrap: wrap;">
                 <button id="startEfSimBtn">▶ 開始模擬</button>
                 <button id="efQueryBtn" disabled>🔍 查詢概率 / 所需抽數</button>
+                <button id="efCopyMatlabBtn" disabled>📋 複製 MATLAB 代碼</button>  
                 <button id="resetEfBtn" style="background:#3f4d5e;">⟲ 重置</button>
             </div>
             <progress id="efProgress" value="0" max="100"></progress>
@@ -337,17 +339,62 @@
             return count;
         }
 
-        // 獲得一個目標的總抽數 (50%機率提前停止，上限120)
+        // 獲得一個目標的總抽數（逐抽模擬，含 30 抽送 10 連）
         function endfield_full_gacha() {
-            let total = 0;
-            while (total < 120) {
-                total += endfield_gacha();
-                // 50% 機率喺呢個六星之後停止
-                if (Math.random() < 0.5) {
-                    if (total > 120) total = 120;
-                    return total;
+            let totalPulls = 0;          // 正常消耗資源嘅抽數
+            let pity = 0;                // 保底計數，正常抽六星用
+            let freePullsUsed = false;   // 30 抽送 10 連只觸發一次
+
+            // 輔助函數：根據 pity 判斷下一抽係咪出六星（模擬正常抽卡嘅一抽）
+            function normalSinglePull() {
+                let isSixStar = false;
+                if (pity <= 65) {
+                    isSixStar = Math.random() < 0.008;
+                } else if (pity < 80) {
+                    let prob = 0.008 + 0.05 * (pity - 65);
+                    isSixStar = Math.random() < prob;
+                } else {
+                    isSixStar = true; // pity == 80 硬保底
+                }
+                return isSixStar;
+            }
+
+            // 主循環
+            while (totalPulls < 120) {
+                // 1. 正常抽一抽
+                totalPulls++;
+                pity++;
+                let gotSixStar = normalSinglePull();
+
+                if (gotSixStar) {
+                    // 抽出六星，50% 係目標
+                    if (Math.random() < 0.5) {
+                        return totalPulls; // 中目標，結束
+                    } else {
+                        // 歪咗，pity 重置，但 totalPulls 唔重置，繼續
+                        pity = 0;
+                    }
+                }
+
+                // 2. 檢查係咪到達 30 抽，觸發免費 10 連（只一次）
+                if (totalPulls === 30 && !freePullsUsed) {
+                    freePullsUsed = true;
+
+                    // 免費 10 連，每抽獨立 0.8% 出六星，唔影響 pity/totalPulls
+                    for (let k = 0; k < 10; k++) {
+                        if (Math.random() < 0.008) {
+                            // 中六星，50% 係目標
+                            if (Math.random() < 0.5) {
+                                return 30; // 免費抽中目標，總抽數 = 30
+                            }
+                            // 歪咗：當冇事發生，唔重置任何嘢
+                        }
+                    }
+                    // 免費 10 連冇中目標，繼續正常抽卡，pity 保持原值
                 }
             }
+
+            // 超過 120 抽硬保底，直接當出目標
             return 120;
         }
 
@@ -359,7 +406,83 @@
             }
             return total;
         }
+        // ▼ ==== 新增：產生 MATLAB 程式碼 ==== ▼
+        function generateMatlabCode(sortedList, title) {
+            const dataStr = sortedList.join(' ');
+            return `% ${title} - 抽卡模擬結果（自動生成）
+% 請在 MATLAB 中執行，需安裝 Statistics and Machine Learning Toolbox
+data = [${dataStr}];
 
+% 繪製 PDF（機率密度函數）
+figure('Name','${title} PDF');
+edges = min(data):1:max(data);
+histogram(data, edges, 'Normalization', 'pdf');
+title('${title} - 概率密度函數 (PDF)');
+xlabel('所需抽數');
+ylabel('機率密度');
+grid on;
+
+% 繪製 CDF 及 90%, 99%, 99.99% 信賴區間
+figure('Name','${title} CDF with multiple CIs');
+
+% 先畫主 CDF
+[f, x] = ecdf(data);
+plot(x, f, 'b-', 'LineWidth', 2);
+hold on;
+
+% 90% 信賴區間 (Alpha = 0.10)
+[f90, x90, flo90, fup90] = ecdf(data, 'Alpha', 0.10);
+plot(x90, flo90, 'r--', x90, fup90, 'r--');
+
+% 99% 信賴區間 (Alpha = 0.01)
+[f99, x99, flo99, fup99] = ecdf(data, 'Alpha', 0.01);
+plot(x99, flo99, 'g--', x99, fup99, 'g--');
+
+% 99.99% 信賴區間 (Alpha = 0.0001)
+[f9999, x9999, flo9999, fup9999] = ecdf(data, 'Alpha', 0.0001);
+plot(x9999, flo9999, 'm--', x9999, fup9999, 'm--');
+
+title('${title} - CDF 及 90%, 99%, 99.99% 信賴區間');
+xlabel('所需抽數');
+ylabel('累積機率');
+legend('CDF', ...
+       '90% CI 下界', '90% CI 上界', ...
+       '99% CI 下界', '99% CI 上界', ...
+       '99.99% CI 下界', '99.99% CI 上界', ...
+       'Location', 'best');
+grid on;
+`;
+        }
+
+        // ▼ ==== 新增：複製到剪貼簿通用函數 ==== ▼
+        function copyToClipboard(text, successMsg) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert(successMsg);
+                }).catch(() => {
+                    fallbackCopy(text, successMsg);
+                });
+            } else {
+                fallbackCopy(text, successMsg);
+            }
+        }
+
+        function fallbackCopy(text, successMsg) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = 0;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                alert(successMsg);
+            } catch (err) {
+                alert('複製失敗，請手動選擇文字。');
+            }
+            document.body.removeChild(textarea);
+        }
+        // ▲ ==== 新增結束 ==== ▲
         // ========== 資源計算常數 (原有) ==========
         const module4 = [20000,20000,30000], module5 = [40000,50000,60000], module6 = [80000,100000,120000];
         const uxp = [41715,58025,76125,106914,161200,255000];
@@ -423,6 +546,7 @@
         // ========== 原有抽卡模擬器 UI ==========
         const startBtn = document.getElementById('startSimBtn');
         const queryBtn = document.getElementById('queryBtn');
+        const copyMatlabBtn = document.getElementById('copyMatlabBtn');
         const progress = document.getElementById('simProgress');
         const resultDiv = document.getElementById('gachaResult');
         let sortedList = [], oList = [];
@@ -437,6 +561,7 @@
             progress.value = 0;
             sortedList = []; oList = [];
             queryBtn.disabled = true;
+            copyMatlabBtn.disabled = true;
         }
         document.getElementById('resetGachaBtn').addEventListener('click', resetGacha);
 
@@ -450,6 +575,7 @@
 
             startBtn.disabled = true;
             queryBtn.disabled = true;
+            copyMatlabBtn.disabled = true;
             resultDiv.textContent = '計緊數，請等等...';
             progress.value = 0;
             sortedList = []; oList = [];
@@ -498,6 +624,7 @@
                     resultDiv.textContent = out;
                     startBtn.disabled = false;
                     queryBtn.disabled = false;
+                    copyMatlabBtn.disabled = false;
                 }
             }
             runSimulationChunk(0);
@@ -541,7 +668,16 @@
             });
             document.getElementById('closeQuery').addEventListener('click', ()=> queryWin.remove());
         });
-
+        // ▼ ==== 新增 MATLAB 複製按鈕事件 ==== ▼
+        copyMatlabBtn.addEventListener('click', () => {
+            if (!sortedList.length) {
+                alert('請先執行一次模擬。');
+                return;
+            }
+            const code = generateMatlabCode(sortedList, '明日方舟抽卡模擬');
+            copyToClipboard(code, 'MATLAB 代碼已複製到剪貼簿！請貼上至 MATLAB 執行。');
+        });
+        // ▲ ==== 新增結束 ==== ▲
         // ========== 原有資源計算器 ==========
         let reservedExp = 0, reservedCash = 0;
         const reserveDisplay = document.getElementById('reserveDisplay');
@@ -669,6 +805,7 @@
         // ========== 新增：終末地抽卡模擬 UI ==========
         const efStartBtn = document.getElementById('startEfSimBtn');
         const efQueryBtn = document.getElementById('efQueryBtn');
+        const efCopyMatlabBtn = document.getElementById('efCopyMatlabBtn');
         const efProgress = document.getElementById('efProgress');
         const efResultDiv = document.getElementById('efResult');
         let efSortedList = [], efOList = [];
@@ -681,6 +818,7 @@
             efSortedList = [];
             efOList = [];
             efQueryBtn.disabled = true;
+            efCopyMatlabBtn.disabled = true;
         }
         document.getElementById('resetEfBtn').addEventListener('click', resetEndfield);
 
@@ -692,6 +830,7 @@
 
             efStartBtn.disabled = true;
             efQueryBtn.disabled = true;
+            efCopyMatlabBtn.disabled = true;
             efResultDiv.textContent = '計緊數，請等等...';
             efProgress.value = 0;
             efSortedList = [];
@@ -742,6 +881,7 @@
                     efResultDiv.textContent = out;
                     efStartBtn.disabled = false;
                     efQueryBtn.disabled = false;
+                    efCopyMatlabBtn.disabled = false;
                 }
             }
             runEfSimulation(0);
@@ -785,7 +925,16 @@
             });
             document.getElementById('efCloseQuery').addEventListener('click', ()=> queryWin.remove());
         });
-
+        // ▼ ==== 新增終末地 MATLAB 複製按鈕事件 ==== ▼
+        efCopyMatlabBtn.addEventListener('click', () => {
+            if (!efSortedList.length) {
+                alert('請先執行一次模擬。');
+                return;
+            }
+            const code = generateMatlabCode(efSortedList, '終末地抽卡模擬');
+            copyToClipboard(code, 'MATLAB 代碼已複製到剪貼簿！請貼上至 MATLAB 執行。');
+        });
+        // ▲ ==== 新增結束 ==== ▲
         // 鍵盤快捷鍵 (Ctrl+數字) 支援新分頁
         window.addEventListener('keydown', (e)=>{
             if (e.ctrlKey) {
