@@ -130,7 +130,7 @@
   },
   "matlab": {
     "auto_generated": "抽卡模擬結果（自動生成）",
-    "instruction": "請在 MATLAB 中執行，需安裝 Statistics and Machine Learning Toolbox",
+    "instruction": "請在 MATLAB 中執行",
     "plot_pdf": "繪製 PDF（機率密度函數）",
     "pdf_title": "概率密度函數 (PDF)",
     "pulls": "所需抽數",
