@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>明日方舟 + 終末地 綜合工具 </title>
+    <title>明日方舟 + 終末地 綜合工具</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; }
         body {
@@ -15,8 +15,35 @@
             max-width: 1200px; width: 100%;
             background: #252b3d; border-radius: 24px;
             padding: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+            position: relative;
         }
-        h1 { margin: 0 0 16px; font-weight: 400; color: #b7c9e2; }
+        .header-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 16px;
+        }
+        h1 { margin: 0; font-weight: 400; color: #b7c9e2; }
+
+        /* 語言切換 */
+        .lang-switcher {
+            position: relative; display: inline-block;
+        }
+        .lang-btn {
+            background: #2f3a4f; border: 1px solid #465672; color: #b7c9e2;
+            padding: 6px 14px; border-radius: 20px; cursor: pointer;
+            font-size: 15px; display: flex; align-items: center; gap: 6px;
+        }
+        .lang-btn:hover { background: #3f4d66; }
+        .lang-dropdown {
+            display: none; position: absolute; right: 0; top: 110%;
+            background: #1e2533; border: 1px solid #465672; border-radius: 12px;
+            min-width: 160px; z-index: 100; overflow: hidden;
+        }
+        .lang-dropdown.show { display: block; }
+        .lang-option {
+            padding: 8px 16px; cursor: pointer; color: #cdd9f0;
+        }
+        .lang-option:hover { background: #2f3a4f; }
+
         .tabs {
             display: flex; gap: 6px; border-bottom: 2px solid #3a465e;
             margin-bottom: 20px; flex-wrap: wrap;
@@ -81,133 +108,138 @@
 </head>
 <body>
 <div class="app-container">
-    <h1>⚔️ 羅德島後勤終端</h1>
-    
-    <div class="tabs">
-        <button class="tab-btn active" data-tab="gacha">🎲 抽卡模擬器</button>
-        <button class="tab-btn" data-tab="resource">📦 資源需求計算</button>
-        <button class="tab-btn" data-tab="pulls">🧮 抽數計算</button>
-        <button class="tab-btn" data-tab="endfield">🌌 終末地抽卡</button>
-    </div>
-
-    <!-- 原有抽卡模擬器分頁 -->
-    <div id="gacha" class="tab-pane active">
-        <div class="card">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 12px;">
-                <div><label>常駐卡池數量：</label><br><input type="number" id="regNeed" value="0" min="0" step="1" class="small-input"></div>
-                <div><label>單目標限定池：</label><br><input type="number" id="olNeed" value="0" min="0" step="1" class="small-input"></div>
-                <div><label>雙目標限定池：</label><br><input type="number" id="tlNeed" value="0" min="0" step="1" class="small-input"></div>
-                <div><label>聯動卡池數量：</label><br><input type="number" id="coopNeed" value="0" min="0" step="1" class="small-input"></div>
-                <div><label>模擬次數：</label><br><input type="number" id="simTimes" value="10000" min="100" step="1000" style="width: 150px;"></div>
-            </div>
-            <div style="margin-top: 20px; display: flex; gap: 16px; flex-wrap: wrap;">
-                <button id="startSimBtn">▶ 開始模擬</button>
-                <button id="queryBtn" disabled>🔍 查詢概率 / 所需抽數</button>
-                <button id="copyMatlabBtn" disabled>📋 複製 MATLAB 代碼</button>
-                <button id="resetGachaBtn" style="background:#3f4d5e;">⟲ 重置</button>
-            </div>
-            <progress id="simProgress" value="0" max="100"></progress>
-            <div id="gachaResult" class="result-box">未開始模擬，請設定參數後撳「開始模擬」。</div>
+    <div class="header-row">
+        <h1 data-i18n="title">⚔️ 羅德島後勤終端</h1>
+        <div class="lang-switcher" id="langSwitcher">
+            <button class="lang-btn" id="langBtn">🌐 <span data-i18n="lang_name">語言</span> ▾</button>
+            <div class="lang-dropdown" id="langDropdown"></div>
         </div>
     </div>
 
-    <!-- 原有資源需求計算分頁 -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="gacha" data-i18n="tabs.gacha">🎲 抽卡模擬器</button>
+        <button class="tab-btn" data-tab="resource" data-i18n="tabs.resource">📦 資源需求計算</button>
+        <button class="tab-btn" data-tab="pulls" data-i18n="tabs.pulls">🧮 抽數計算</button>
+        <button class="tab-btn" data-tab="endfield" data-i18n="tabs.endfield">🌌 終末地抽卡</button>
+    </div>
+
+    <!-- 抽卡模擬器分頁 -->
+    <div id="gacha" class="tab-pane active">
+        <div class="card">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 12px;">
+                <div><label data-i18n="gacha.label_reg">常駐卡池數量：</label><br><input type="number" id="regNeed" value="0" min="0" step="1" class="small-input"></div>
+                <div><label data-i18n="gacha.label_ol">單目標限定池：</label><br><input type="number" id="olNeed" value="0" min="0" step="1" class="small-input"></div>
+                <div><label data-i18n="gacha.label_tl">雙目標限定池：</label><br><input type="number" id="tlNeed" value="0" min="0" step="1" class="small-input"></div>
+                <div><label data-i18n="gacha.label_coop">聯動卡池數量：</label><br><input type="number" id="coopNeed" value="0" min="0" step="1" class="small-input"></div>
+                <div><label data-i18n="gacha.label_simtimes">模擬次數：</label><br><input type="number" id="simTimes" value="10000" min="100" step="1000" style="width: 150px;"></div>
+            </div>
+            <div style="margin-top: 20px; display: flex; gap: 16px; flex-wrap: wrap;">
+                <button id="startSimBtn" data-i18n="gacha.sim_button">▶ 開始模擬</button>
+                <button id="queryBtn" disabled data-i18n="gacha.query_button">🔍 查詢概率 / 所需抽數</button>
+                <button id="copyMatlabBtn" disabled data-i18n="gacha.copy_matlab">📋 複製 MATLAB 代碼</button>
+                <button id="resetGachaBtn" style="background:#3f4d5e;" data-i18n="gacha.reset">⟲ 重置</button>
+            </div>
+            <progress id="simProgress" value="0" max="100"></progress>
+            <div id="gachaResult" class="result-box" data-i18n="gacha.result_initial">未開始模擬，請設定參數後撳「開始模擬」。</div>
+        </div>
+    </div>
+
+    <!-- 資源需求計算分頁 -->
     <div id="resource" class="tab-pane">
         <div class="card">
-            <label>📋 升級路線（每行一個：星級 起始等級 結束等級 數量）</label>
-            <textarea id="upgradeInput" rows="5" style="width:100%; font-family: monospace;" placeholder="例：5 230 260 1
-6 01 290 3">5 230 260 1
+            <label data-i18n="resource.upgrade_label">📋 升級路線（每行一個：星級 起始等級 結束等級 數量）</label>
+            <textarea id="upgradeInput" rows="5" style="width:100%; font-family: monospace;" data-i18n-placeholder="resource.upgrade_placeholder">5 230 260 1
 6 01 290 1</textarea>
-            <p style="color:#a0b5d0; margin:4px 0;">* 接受01，230，240...280，290。01 = 精0 1級</p>
+            <p style="color:#a0b5d0; margin:4px 0;" data-i18n="resource.upgrade_hint">* 接受01，230，240...280，290。01 = 精0 1級</p>
 
             <div style="display: flex; gap: 24px; flex-wrap: wrap; margin: 20px 0;">
                 <div class="module-card">
-                    <h4 style="margin:0 0 10px;">⭐4 模組升級</h4>
-                    0→1級 <input type="number" id="m4L1" value="0" min="0" style="width:70px;"><br>
-                    1→2級 <input type="number" id="m4L2" value="0" min="0" style="width:70px;"><br>
-                    2→3級 <input type="number" id="m4L3" value="0" min="0" style="width:70px;">
+                    <h4 style="margin:0 0 10px;" data-i18n="resource.mod4_title">⭐4 模組升級</h4>
+                    <span data-i18n="resource.lvl01">0→1級</span> <input type="number" id="m4L1" value="0" min="0" style="width:70px;"><br>
+                    <span data-i18n="resource.lvl12">1→2級</span> <input type="number" id="m4L2" value="0" min="0" style="width:70px;"><br>
+                    <span data-i18n="resource.lvl23">2→3級</span> <input type="number" id="m4L3" value="0" min="0" style="width:70px;">
                 </div>
                 <div class="module-card">
-                    <h4 style="margin:0 0 10px;">⭐5 模組升級</h4>
-                    0→1級 <input type="number" id="m5L1" value="0" min="0" style="width:70px;"><br>
-                    1→2級 <input type="number" id="m5L2" value="0" min="0" style="width:70px;"><br>
-                    2→3級 <input type="number" id="m5L3" value="0" min="0" style="width:70px;">
+                    <h4 style="margin:0 0 10px;" data-i18n="resource.mod5_title">⭐5 模組升級</h4>
+                    <span data-i18n="resource.lvl01">0→1級</span> <input type="number" id="m5L1" value="0" min="0" style="width:70px;"><br>
+                    <span data-i18n="resource.lvl12">1→2級</span> <input type="number" id="m5L2" value="0" min="0" style="width:70px;"><br>
+                    <span data-i18n="resource.lvl23">2→3級</span> <input type="number" id="m5L3" value="0" min="0" style="width:70px;">
                 </div>
                 <div class="module-card">
-                    <h4 style="margin:0 0 10px;">⭐6 模組升級</h4>
-                    0→1級 <input type="number" id="m6L1" value="0" min="0" style="width:70px;"><br>
-                    1→2級 <input type="number" id="m6L2" value="0" min="0" style="width:70px;"><br>
-                    2→3級 <input type="number" id="m6L3" value="0" min="0" style="width:70px;">
+                    <h4 style="margin:0 0 10px;" data-i18n="resource.mod6_title">⭐6 模組升級</h4>
+                    <span data-i18n="resource.lvl01">0→1級</span> <input type="number" id="m6L1" value="0" min="0" style="width:70px;"><br>
+                    <span data-i18n="resource.lvl12">1→2級</span> <input type="number" id="m6L2" value="0" min="0" style="width:70px;"><br>
+                    <span data-i18n="resource.lvl23">2→3級</span> <input type="number" id="m6L3" value="0" min="0" style="width:70px;">
                 </div>
             </div>
 
-            <label>💰 剩餘資源</label>
+            <label data-i18n="resource.remain_label">💰 剩餘資源</label>
             <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                經驗卡 (2000/1000/400/200): 
+                <span data-i18n="resource.exp_cards">經驗卡 (2000/1000/400/200):</span>
                 <input type="number" id="remXP1" value="0" style="width:70px;" placeholder="2000">
                 <input type="number" id="remXP2" value="0" style="width:70px;" placeholder="1000">
                 <input type="number" id="remXP3" value="0" style="width:70px;" placeholder="400">
                 <input type="number" id="remXP4" value="0" style="width:70px;" placeholder="200">
-                &nbsp;&nbsp; 龍門幣: <input type="number" id="remCash" value="0" style="width:100px;">
+                &nbsp;&nbsp; <span data-i18n="resource.lmd">龍門幣:</span> <input type="number" id="remCash" value="0" style="width:100px;">
             </div>
 
             <div style="margin-top:18px;">
-                <label>📊 每日基建產出</label>
+                <label data-i18n="resource.daily_label">📊 每日基建產出</label>
                 <div style="display:flex; gap:20px; flex-wrap:wrap;">
-                    經驗: <input type="number" id="dailyXP" value="0" style="width:100px;">
-                    龍門幣: <input type="number" id="dailyCash" value="0" style="width:100px;">
-                    體力: <input type="number" id="dailyEnergy" value="240" style="width:100px;">
+                    <span data-i18n="resource.daily_exp">經驗:</span> <input type="number" id="dailyXP" value="0" style="width:100px;">
+                    <span data-i18n="resource.daily_cash">龍門幣:</span> <input type="number" id="dailyCash" value="0" style="width:100px;">
+                    <span data-i18n="resource.daily_energy">體力:</span> <input type="number" id="dailyEnergy" value="240" style="width:100px;">
                 </div>
                 <label style="margin-left:20px;">
-                    <input type="checkbox" id="includeMission"> 計埋任務獎勵
+                    <input type="checkbox" id="includeMission"> <span data-i18n="resource.include_mission">計埋任務獎勵</span>
                 </label>
             </div>
 
             <div style="margin: 20px 0; display: flex; gap: 16px; align-items: center;">
-                <button id="setReserveBtn">⚙️ 設定資源儲備</button>
-                <span id="reserveDisplay" style="color:#9fc5ff;">目前儲備：經驗 0　龍門幣 0</span>
+                <button id="setReserveBtn" data-i18n="resource.set_reserve">⚙️ 設定資源儲備</button>
+                <span id="reserveDisplay" style="color:#9fc5ff;" data-i18n="resource.reserve_display">目前儲備：經驗 0　龍門幣 0</span>
             </div>
 
             <div style="display: flex; gap: 20px;">
-                <button id="calcResourceBtn">📐 計數</button>
-                <button id="resetResourceBtn" style="background:#3f4d5e;">⟲ 重置</button>
+                <button id="calcResourceBtn" data-i18n="resource.calc_button">📐 計數</button>
+                <button id="resetResourceBtn" style="background:#3f4d5e;" data-i18n="resource.reset">⟲ 重置</button>
             </div>
             <div id="resourceResult" class="result-box"></div>
         </div>
     </div>
 
-    <!-- 原有抽數計算分頁 -->
+    <!-- 抽數計算分頁 -->
     <div id="pulls" class="tab-pane">
         <div class="card">
             <div style="display: grid; gap: 16px; max-width: 500px;">
-                <div><label>💎 合成玉數量：</label> <input type="number" id="orundum" value="0" min="0" style="width:150px;"></div>
-                <div><label>🎫 十抽卷數量：</label> <input type="number" id="tenPermits" value="0" min="0" style="width:150px;"></div>
-                <div><label>🎟️ 單抽卷數量：</label> <input type="number" id="permits" value="0" min="0" style="width:150px;"></div>
-                <div><label>🔶 源石數量：</label> <input type="number" id="originite" value="0" min="0" style="width:150px;"></div>
+                <div><label data-i18n="pulls.label_orundum">💎 合成玉數量：</label> <input type="number" id="orundum" value="0" min="0" style="width:150px;"></div>
+                <div><label data-i18n="pulls.label_ten">🎫 十抽卷數量：</label> <input type="number" id="tenPermits" value="0" min="0" style="width:150px;"></div>
+                <div><label data-i18n="pulls.label_single">🎟️ 單抽卷數量：</label> <input type="number" id="permits" value="0" min="0" style="width:150px;"></div>
+                <div><label data-i18n="pulls.label_originite">🔶 源石數量：</label> <input type="number" id="originite" value="0" min="0" style="width:150px;"></div>
             </div>
             <div style="margin-top: 30px;">
-                <button id="calcPullsBtn">🧮 計數</button>
-                <button id="resetPullsBtn" style="background:#3f4d5e; margin-left:16px;">⟲ 重置</button>
+                <button id="calcPullsBtn" data-i18n="pulls.calc_button">🧮 計數</button>
+                <button id="resetPullsBtn" style="background:#3f4d5e; margin-left:16px;" data-i18n="pulls.reset">⟲ 重置</button>
             </div>
             <div id="pullsResult" class="result-box" style="margin-top:20px; font-size:20px;"></div>
         </div>
     </div>
 
-    <!-- 新增：終末地抽卡模擬分頁 -->
+    <!-- 終末地抽卡模擬分頁 -->
     <div id="endfield" class="tab-pane">
         <div class="card">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 12px;">
-                <div><label>🎯 終末地目標數量：</label><br><input type="number" id="efTarget" value="1" min="1" step="1" class="small-input"></div>
-                <div><label>🔁 模擬次數：</label><br><input type="number" id="efSimTimes" value="10000" min="100" step="1000" style="width: 150px;"></div>
+                <div><label data-i18n="endfield.label_target">🎯 終末地目標數量：</label><br><input type="number" id="efTarget" value="1" min="1" step="1" class="small-input"></div>
+                <div><label data-i18n="endfield.label_simtimes">🔁 模擬次數：</label><br><input type="number" id="efSimTimes" value="10000" min="100" step="1000" style="width: 150px;"></div>
             </div>
             <div style="margin-top: 20px; display: flex; gap: 16px; flex-wrap: wrap;">
-                <button id="startEfSimBtn">▶ 開始模擬</button>
-                <button id="efQueryBtn" disabled>🔍 查詢概率 / 所需抽數</button>
-                <button id="efCopyMatlabBtn" disabled>📋 複製 MATLAB 代碼</button>  
-                <button id="resetEfBtn" style="background:#3f4d5e;">⟲ 重置</button>
+                <button id="startEfSimBtn" data-i18n="endfield.sim_button">▶ 開始模擬</button>
+                <button id="efQueryBtn" disabled data-i18n="endfield.query_button">🔍 查詢概率 / 所需抽數</button>
+                <button id="efCopyMatlabBtn" disabled data-i18n="endfield.copy_matlab">📋 複製 MATLAB 代碼</button>
+                <button id="resetEfBtn" style="background:#3f4d5e;" data-i18n="endfield.reset">⟲ 重置</button>
             </div>
             <progress id="efProgress" value="0" max="100"></progress>
-            <div id="efResult" class="result-box">未開始模擬，請設定參數後撳「開始模擬」。</div>
+            <div id="efResult" class="result-box" data-i18n="endfield.result_initial">未開始模擬，請設定參數後撳「開始模擬」。</div>
         </div>
     </div>
 </div>
@@ -215,736 +247,840 @@
 <!-- 資源儲備彈窗 (隱藏) -->
 <div id="reserveModal" style="display:none; position:fixed; top:0;left:0;width:100%;height:100%; background:rgba(0,0,0,0.7); align-items:center; justify-content:center;">
     <div style="background:#252b3d; padding:24px; border-radius:28px; width:700px; max-width:90%;">
-        <h3>🔒 設定資源儲備</h3>
-        <label>升級路線（同上）</label>
+        <h3 data-i18n="modal.reserve_title">🔒 設定資源儲備</h3>
+        <label data-i18n="modal.upgrade_label">升級路線（同上）</label>
         <textarea id="modalUpgrade" rows="5" style="width:100%"></textarea>
         <div style="display: flex; gap: 24px; flex-wrap: wrap; margin: 20px 0;">
                 <div class="module-card">
-                    <h4 style="margin:0 0 10px;">⭐4 模組升級</h4>
-                    0→1級 <input type="number" id="mm4L1" value="0" min="0" style="width:70px;"><br>
-                    1→2級 <input type="number" id="mm4L2" value="0" min="0" style="width:70px;"><br>
-                    2→3級 <input type="number" id="mm4L3" value="0" min="0" style="width:70px;">
+                    <h4 style="margin:0 0 10px;" data-i18n="resource.mod4_title">⭐4 模組升級</h4>
+                    <span data-i18n="resource.lvl01">0→1級</span> <input type="number" id="mm4L1" value="0" min="0" style="width:70px;"><br>
+                    <span data-i18n="resource.lvl12">1→2級</span> <input type="number" id="mm4L2" value="0" min="0" style="width:70px;"><br>
+                    <span data-i18n="resource.lvl23">2→3級</span> <input type="number" id="mm4L3" value="0" min="0" style="width:70px;">
                 </div>
                 <div class="module-card">
-                    <h4 style="margin:0 0 10px;">⭐5 模組升級</h4>
-                    0→1級 <input type="number" id="mm5L1" value="0" min="0" style="width:70px;"><br>
-                    1→2級 <input type="number" id="mm5L2" value="0" min="0" style="width:70px;"><br>
-                    2→3級 <input type="number" id="mm5L3" value="0" min="0" style="width:70px;">
+                    <h4 style="margin:0 0 10px;" data-i18n="resource.mod5_title">⭐5 模組升級</h4>
+                    <span data-i18n="resource.lvl01">0→1級</span> <input type="number" id="mm5L1" value="0" min="0" style="width:70px;"><br>
+                    <span data-i18n="resource.lvl12">1→2級</span> <input type="number" id="mm5L2" value="0" min="0" style="width:70px;"><br>
+                    <span data-i18n="resource.lvl23">2→3級</span> <input type="number" id="mm5L3" value="0" min="0" style="width:70px;">
                 </div>
                 <div class="module-card">
-                    <h4 style="margin:0 0 10px;">⭐6 模組升級</h4>
-                    0→1級 <input type="number" id="mm6L1" value="0" min="0" style="width:70px;"><br>
-                    1→2級 <input type="number" id="mm6L2" value="0" min="0" style="width:70px;"><br>
-                    2→3級 <input type="number" id="mm6L3" value="0" min="0" style="width:70px;">
+                    <h4 style="margin:0 0 10px;" data-i18n="resource.mod6_title">⭐6 模組升級</h4>
+                    <span data-i18n="resource.lvl01">0→1級</span> <input type="number" id="mm6L1" value="0" min="0" style="width:70px;"><br>
+                    <span data-i18n="resource.lvl12">1→2級</span> <input type="number" id="mm6L2" value="0" min="0" style="width:70px;"><br>
+                    <span data-i18n="resource.lvl23">2→3級</span> <input type="number" id="mm6L3" value="0" min="0" style="width:70px;">
                 </div>
             </div>
-        <button id="computeReserveBtn">計算儲備需求</button>
+        <button id="computeReserveBtn" data-i18n="modal.compute_reserve">計算儲備需求</button>
         <span id="modalReserveResult" style="margin-left:20px;"></span>
         <div style="margin-top:20px; display:flex; gap:16px; justify-content:flex-end;">
-            <button id="applyReserveBtn" style="background:#3f8c5e;">套用並關閉</button>
-            <button id="closeModalBtn" style="background:#5a4a4a;">取消</button>
+            <button id="applyReserveBtn" style="background:#3f8c5e;" data-i18n="modal.apply">套用並關閉</button>
+            <button id="closeModalBtn" style="background:#5a4a4a;" data-i18n="modal.cancel">取消</button>
         </div>
     </div>
 </div>
 
 <script>
-    (function(){
-        "use strict";
+(function(){
+    "use strict";
 
-        // ========== 原有明日方舟抽卡邏輯 ==========
-        function six(sixProbi) {
-            return Math.floor(Math.random() * 1000) + 1 <= sixProbi * 1000;
-        }
-        function gacha() {
-            let sixed = false;
-            let sixProbi = 0.02;
-            let gachaNumber = 0;
-            for (let i = 1; i <= 50; i++) {
-                gachaNumber++;
-                if (six(sixProbi)) { sixed = true; break; }
-            }
-            if (!sixed) {
-                for (let j = 51; j < 100; j++) {
-                    sixProbi = 0.02 + 0.02 * (j - 50);
-                    gachaNumber++;
-                    if (six(sixProbi)) break;
-                }
-            }
-            return gachaNumber;
-        }
-        function r_gacha() {
-            let gachaNumber = 0;
-            while (true) {
-                gachaNumber += gacha();
-                if (gachaNumber >= 150) return gachaNumber;
-                if (Math.random() < 0.5) return gachaNumber;
-            }
-        }
-        function ol_gacha() {
-            let gachaNumber = 0;
-            while (true) {
-                gachaNumber += gacha();
-                if (gachaNumber >= 300) return 300;
-                if (Math.floor(Math.random() * 100) + 1 <= 35) return gachaNumber;
-            }
-        }
-        function tl_gacha() {
-            let gachaNumber = 0, get = 0;
-            while (get < 2) {
-                gachaNumber += gacha();
-                if (gachaNumber >= 300) return 300;
-                if (get === 0 && Math.floor(Math.random()*100)+1 <= 70) get++;
-                else if (get === 1 && Math.floor(Math.random()*100)+1 <= 35) return gachaNumber;
-            }
-        }
-        function coop_gacha() {
-            let gachaNumber = 0;
-            while (true) {
-                gachaNumber += gacha();
-                if (gachaNumber >= 120) return 120;
-                if (Math.random() < 0.5) return gachaNumber;
-            }
-        }
-        function total_gacha(reg, ol, tl, coop) {
-            let total = 0;
-            for (let i=0; i<reg; i++) total += r_gacha();
-            for (let i=0; i<ol; i++) total += ol_gacha();
-            for (let i=0; i<tl; i++) total += tl_gacha();
-            for (let i=0; i<coop; i++) total += coop_gacha();
-            return total;
-        }
+    // ==================== i18n 引擎 ====================
+    const langConfig = {
+        'zh-HK': { file: 'lang/zh-HK.json', name: '廣東話口語' },
+        'en':    { file: 'lang/en.json', name: 'English' },
+        'zh-TW':    { file: 'lang/zh-TW.json', name: '繁體中文' }
+        // 日後加語言只需加一行
+    };
+    const DEFAULT_LANG = 'zh-HK';
+    let currentLang = DEFAULT_LANG;
+    let translations = {};  // 當前語言字典
+    let langCache = {};     // 已載入嘅語言 cache
 
-        // ========== 新增終末地抽卡邏輯 ==========
-        // 單次獲得六星的抽數 (80抽硬保底)
-        function endfield_gacha() {
-            let sixed = false;
-            let six_probi = 0.008;
-            let count = 0;
-            // 前65抽 固定0.8%
-            for (let i = 1; i <= 65; i++) {
-                count++;
-                if (Math.random() <= six_probi) {
-                    sixed = true;
-                    break;
-                }
-            }
-            if (!sixed) {
-                // 66~80抽，每抽+5%機率
-                for (let j = 66; j <= 80; j++) {
-                    six_probi = 0.008 + 0.05 * (j - 65);
-                    count++;
-                    if (Math.random() <= six_probi) break;
-                }
-            }
-            return count;
-        }
+    // 偵測瀏覽器語言
+    function detectLanguage() {
+        const browser = navigator.language || '';
+        // 完全匹配優先
+        if (langConfig[browser]) return browser;
+        // 基礎語言 fallback
+        const base = browser.split('-')[0];
+        if (langConfig[base]) return base;
+        return DEFAULT_LANG;
+    }
 
-        // 獲得一個目標的總抽數（逐抽模擬，含 30 抽送 10 連）
-        function endfield_full_gacha() {
-            let totalPulls = 0;          // 正常消耗資源嘅抽數
-            let pity = 0;                // 保底計數，正常抽六星用
-            let freePullsUsed = false;   // 30 抽送 10 連只觸發一次
-
-            // 輔助函數：根據 pity 判斷下一抽係咪出六星（模擬正常抽卡嘅一抽）
-            function normalSinglePull() {
-                let isSixStar = false;
-                if (pity <= 65) {
-                    isSixStar = Math.random() < 0.008;
-                } else if (pity < 80) {
-                    let prob = 0.008 + 0.05 * (pity - 65);
-                    isSixStar = Math.random() < prob;
+    // 載入語言檔
+    async function loadLanguage(lang) {
+        if (langCache[lang]) {
+            translations = langCache[lang];
+        } else {
+            try {
+                const resp = await fetch(langConfig[lang].file);
+                if (!resp.ok) throw new Error('Fetch failed');
+                const data = await resp.json();
+                langCache[lang] = data;
+                translations = data;
+            } catch (e) {
+                console.warn(`Failed to load ${lang}, fallback to ${DEFAULT_LANG}`);
+                if (lang !== DEFAULT_LANG) {
+                    return loadLanguage(DEFAULT_LANG);
                 } else {
-                    isSixStar = true; // pity == 80 硬保底
+                    // 極端情況：連 default 都 load 唔到，用空字典避免 crash
+                    translations = {};
                 }
-                return isSixStar;
             }
+        }
+        currentLang = lang;
+        applyLanguage();
+    }
 
-            // 主循環
-            while (totalPulls < 120) {
-                // 1. 正常抽一抽
-                totalPulls++;
-                pity++;
-                let gotSixStar = normalSinglePull();
+    // 將翻譯套用到頁面
+    function applyLanguage() {
+        // 更新所有 [data-i18n] 元素嘅文字
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            const text = t(key);
+            if (text !== key) el.textContent = text;
+        });
+        // 更新 placeholder 屬性
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            el.placeholder = t(key);
+        });
+        // 更新語言按鈕顯示
+        const langNameKey = 'lang_name';
+        const btnText = t(langNameKey) || langConfig[currentLang]?.name || currentLang;
+        document.querySelector('#langBtn span').textContent = btnText;
+        // 觸發自訂事件，畀動態內容重新 render
+        document.dispatchEvent(new CustomEvent('languageChanged'));
+    }
 
-                if (gotSixStar) {
-                    // 抽出六星，50% 係目標
-                    if (Math.random() < 0.5) {
-                        return totalPulls; // 中目標，結束
-                    } else {
-                        // 歪咗，pity 重置，但 totalPulls 唔重置，繼續
-                        pity = 0;
+    // 翻譯函數，支援 {{placeholder}}
+    function t(key, placeholders = {}) {
+        // 用點號分隔巢狀 key
+        const keys = key.split('.');
+        let val = translations;
+        for (const k of keys) {
+            if (val && typeof val === 'object' && k in val) {
+                val = val[k];
+            } else {
+                // fallback 到 key 本身
+                return key;
+            }
+        }
+        if (typeof val !== 'string') return key;
+        // 取代佔位符
+        return val.replace(/\{\{(\w+)\}\}/g, (_, name) => {
+            return placeholders.hasOwnProperty(name) ? placeholders[name] : `{{${name}}}`;
+        });
+    }
+
+    // 建立語言下拉選單
+    function buildLangSwitcher() {
+        const dropdown = document.getElementById('langDropdown');
+        dropdown.innerHTML = '';
+        for (const [code, cfg] of Object.entries(langConfig)) {
+            const opt = document.createElement('div');
+            opt.className = 'lang-option';
+            opt.textContent = cfg.name;
+            opt.addEventListener('click', () => {
+                loadLanguage(code);
+                dropdown.classList.remove('show');
+            });
+            dropdown.appendChild(opt);
+        }
+        document.getElementById('langBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('langDropdown').classList.toggle('show');
+        });
+        document.addEventListener('click', () => {
+            document.getElementById('langDropdown').classList.remove('show');
+        });
+    }
+
+    // ==================== 原有遊戲邏輯 ====================
+    function six(sixProbi) {
+        return Math.floor(Math.random() * 1000) + 1 <= sixProbi * 1000;
+    }
+    function gacha() {
+        let sixed = false;
+        let sixProbi = 0.02;
+        let gachaNumber = 0;
+        for (let i = 1; i <= 50; i++) {
+            gachaNumber++;
+            if (six(sixProbi)) { sixed = true; break; }
+        }
+        if (!sixed) {
+            for (let j = 51; j < 100; j++) {
+                sixProbi = 0.02 + 0.02 * (j - 50);
+                gachaNumber++;
+                if (six(sixProbi)) break;
+            }
+        }
+        return gachaNumber;
+    }
+    function r_gacha() {
+        let gachaNumber = 0;
+        while (true) {
+            gachaNumber += gacha();
+            if (gachaNumber >= 150) return gachaNumber;
+            if (Math.random() < 0.5) return gachaNumber;
+        }
+    }
+    function ol_gacha() {
+        let gachaNumber = 0;
+        while (true) {
+            gachaNumber += gacha();
+            if (gachaNumber >= 300) return 300;
+            if (Math.floor(Math.random() * 100) + 1 <= 35) return gachaNumber;
+        }
+    }
+    function tl_gacha() {
+        let gachaNumber = 0, get = 0;
+        while (get < 2) {
+            gachaNumber += gacha();
+            if (gachaNumber >= 300) return 300;
+            if (get === 0 && Math.floor(Math.random()*100)+1 <= 70) get++;
+            else if (get === 1 && Math.floor(Math.random()*100)+1 <= 35) return gachaNumber;
+        }
+    }
+    function coop_gacha() {
+        let gachaNumber = 0;
+        while (true) {
+            gachaNumber += gacha();
+            if (gachaNumber >= 120) return 120;
+            if (Math.random() < 0.5) return gachaNumber;
+        }
+    }
+    function total_gacha(reg, ol, tl, coop) {
+        let total = 0;
+        for (let i=0; i<reg; i++) total += r_gacha();
+        for (let i=0; i<ol; i++) total += ol_gacha();
+        for (let i=0; i<tl; i++) total += tl_gacha();
+        for (let i=0; i<coop; i++) total += coop_gacha();
+        return total;
+    }
+
+    function endfield_gacha() {
+        let sixed = false;
+        let six_probi = 0.008;
+        let count = 0;
+        for (let i = 1; i <= 65; i++) {
+            count++;
+            if (Math.random() <= six_probi) { sixed = true; break; }
+        }
+        if (!sixed) {
+            for (let j = 66; j <= 80; j++) {
+                six_probi = 0.008 + 0.05 * (j - 65);
+                count++;
+                if (Math.random() <= six_probi) break;
+            }
+        }
+        return count;
+    }
+    function endfield_full_gacha() {
+        let totalPulls = 0;
+        let pity = 0;
+        let freePullsUsed = false;
+        function normalSinglePull() {
+            let isSixStar = false;
+            if (pity <= 65) {
+                isSixStar = Math.random() < 0.008;
+            } else if (pity < 80) {
+                let prob = 0.008 + 0.05 * (pity - 65);
+                isSixStar = Math.random() < prob;
+            } else {
+                isSixStar = true;
+            }
+            return isSixStar;
+        }
+        while (totalPulls < 120) {
+            totalPulls++;
+            pity++;
+            let gotSixStar = normalSinglePull();
+            if (gotSixStar) {
+                if (Math.random() < 0.5) return totalPulls;
+                else pity = 0;
+            }
+            if (totalPulls === 30 && !freePullsUsed) {
+                freePullsUsed = true;
+                for (let k = 0; k < 10; k++) {
+                    if (Math.random() < 0.008) {
+                        if (Math.random() < 0.5) return 30;
                     }
                 }
-
-                // 2. 檢查係咪到達 30 抽，觸發免費 10 連（只一次）
-                if (totalPulls === 30 && !freePullsUsed) {
-                    freePullsUsed = true;
-
-                    // 免費 10 連，每抽獨立 0.8% 出六星，唔影響 pity/totalPulls
-                    for (let k = 0; k < 10; k++) {
-                        if (Math.random() < 0.008) {
-                            // 中六星，50% 係目標
-                            if (Math.random() < 0.5) {
-                                return 30; // 免費抽中目標，總抽數 = 30
-                            }
-                            // 歪咗：當冇事發生，唔重置任何嘢
-                        }
-                    }
-                    // 免費 10 連冇中目標，繼續正常抽卡，pity 保持原值
-                }
             }
-
-            // 超過 120 抽硬保底，直接當出目標
-            return 120;
         }
+        return 120;
+    }
+    function endfield_total_gacha(targetCount) {
+        let total = 0;
+        for (let i = 0; i < targetCount; i++) total += endfield_full_gacha();
+        return total;
+    }
 
-        // 模擬多個目標的總抽數
-        function endfield_total_gacha(targetCount) {
-            let total = 0;
-            for (let i = 0; i < targetCount; i++) {
-                total += endfield_full_gacha();
-            }
-            return total;
-        }
-        // ▼ ==== 新增：產生 MATLAB 程式碼 ==== ▼
-        function generateMatlabCode(sortedList, title) {
-            const dataStr = sortedList.join(' ');
-            return `% ${title} - 抽卡模擬結果（自動生成）
-% 請在 MATLAB 中執行，需安裝 Statistics and Machine Learning Toolbox
+    function generateMatlabCode(sortedList, title) {
+        const dataStr = sortedList.join(' ');
+        return `% ${title} - ${t('matlab.auto_generated')}
+% ${t('matlab.instruction')}
 data = [${dataStr}];
 
-% 繪製 PDF（機率密度函數）
+% ${t('matlab.plot_pdf')}
 figure('Name','${title} PDF');
 edges = min(data):1:max(data);
 histogram(data, edges, 'Normalization', 'pdf');
-title('${title} - 概率密度函數 (PDF)');
-xlabel('所需抽數');
-ylabel('機率密度');
+title('${title} - ${t('matlab.pdf_title')}');
+xlabel('${t('matlab.pulls')}');
+ylabel('${t('matlab.density')}');
 grid on;
 
-% 繪製 CDF 及 90%, 99%, 99.99% 信賴區間
+% ${t('matlab.plot_cdf')}
 figure('Name','${title} CDF with multiple CIs');
 
-% 先畫主 CDF
 [f, x] = ecdf(data);
 plot(x, f, 'b-', 'LineWidth', 2);
 hold on;
 
-% 90% 信賴區間 (Alpha = 0.10)
 [f90, x90, flo90, fup90] = ecdf(data, 'Alpha', 0.10);
 plot(x90, flo90, 'r--', x90, fup90, 'r--');
 
-% 99% 信賴區間 (Alpha = 0.01)
 [f99, x99, flo99, fup99] = ecdf(data, 'Alpha', 0.01);
 plot(x99, flo99, 'g--', x99, fup99, 'g--');
 
-% 99.99% 信賴區間 (Alpha = 0.0001)
 [f9999, x9999, flo9999, fup9999] = ecdf(data, 'Alpha', 0.0001);
 plot(x9999, flo9999, 'm--', x9999, fup9999, 'm--');
 
-title('${title} - CDF 及 90%, 99%, 99.99% 信賴區間');
-xlabel('所需抽數');
-ylabel('累積機率');
+title('${title} - ${t('matlab.cdf_title')}');
+xlabel('${t('matlab.pulls')}');
+ylabel('${t('matlab.cumulative_prob')}');
 legend('CDF', ...
-       '90% CI 下界', '90% CI 上界', ...
-       '99% CI 下界', '99% CI 上界', ...
-       '99.99% CI 下界', '99.99% CI 上界', ...
+       '${t('matlab.ci90_lower')}', '${t('matlab.ci90_upper')}', ...
+       '${t('matlab.ci99_lower')}', '${t('matlab.ci99_upper')}', ...
+       '${t('matlab.ci9999_lower')}', '${t('matlab.ci9999_upper')}', ...
        'Location', 'best');
 grid on;
 `;
-        }
+    }
 
-        // ▼ ==== 新增：複製到剪貼簿通用函數 ==== ▼
-        function copyToClipboard(text, successMsg) {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(() => {
-                    alert(successMsg);
-                }).catch(() => {
-                    fallbackCopy(text, successMsg);
-                });
-            } else {
-                fallbackCopy(text, successMsg);
-            }
-        }
-
-        function fallbackCopy(text, successMsg) {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            textarea.style.position = 'fixed';
-            textarea.style.opacity = 0;
-            document.body.appendChild(textarea);
-            textarea.select();
-            try {
-                document.execCommand('copy');
+    function copyToClipboard(text, successMsg) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
                 alert(successMsg);
-            } catch (err) {
-                alert('複製失敗，請手動選擇文字。');
-            }
-            document.body.removeChild(textarea);
-        }
-        // ▲ ==== 新增結束 ==== ▲
-        // ========== 資源計算常數 (原有) ==========
-        const module4 = [20000,20000,30000], module5 = [40000,50000,60000], module6 = [80000,100000,120000];
-        const uxp = [41715,58025,76125,106914,161200,255000];
-        const uc = [29389,46048,67255,104194,171616,297577];
-        const exp = [201211,290411,412411];
-        const ec = [235117,400823,618717];
-
-        // ========== 輔助函數 (原有) ==========
-        function parseUpgradeLines(text) {
-            const lines = text.trim().split('\n');
-            const result = [];
-            for (let line of lines) {
-                const parts = line.trim().split(/\s+/);
-                if (parts.length === 4) {
-                    const star = parseInt(parts[0]), beg = parseInt(parts[1]), end = parseInt(parts[2]), count = parseInt(parts[3]);
-                    if (!isNaN(star) && !isNaN(beg) && !isNaN(end) && !isNaN(count))
-                        result.push([star, beg, end, count]);
-                }
-            }
-            return result;
-        }
-
-        function calcModuleCost(m4, m5, m6) {
-            let m4cost = 0, m5cost = 0, m6cost = 0;
-            if (m4[0]!==0) m4cost = m4[1]*module4[0] + m4[2]*module4[1] + m4[3]*module4[2];
-            if (m5[0]!==0) m5cost = m5[1]*module5[0] + m5[2]*module5[1] + m5[3]*module5[2];
-            if (m6[0]!==0) m6cost = m6[1]*module6[0] + m6[2]*module6[1] + m6[3]*module6[2];
-            return m4cost + m5cost + m6cost;
-        }
-
-        function calcTotalRequirements(upgradeLines, m4, m5, m6) {
-            let ecount = [0,0,0];
-            let count = [0,0,0,0,0,0];
-            for (let line of upgradeLines) {
-                const star = line[0], beg = line[1], end = line[2], n = line[3];
-                let b = beg;
-                if (b === 1) { ecount[star-4] += n; b = 230; }
-                const long = (end - b) / 10;
-                const short = (b - 230) / 10;
-                for (let i=0; i<long; i++) count[i] += n;
-                for (let i=0; i<short; i++) count[i] -= n;
-            }
-            let expNeeded = ecount.reduce((s,v,i)=> s + v*exp[i], 0);
-            let cashNeededEC = ecount.reduce((s,v,i)=> s + v*ec[i], 0);
-            expNeeded += count.reduce((s,v,i)=> s + v*uxp[i], 0);
-            let cashNeededUC = count.reduce((s,v,i)=> s + v*uc[i], 0);
-            const moduleCash = calcModuleCost(m4, m5, m6);
-            return { exp: expNeeded, cash: cashNeededEC + cashNeededUC + moduleCash };
-        }
-
-        // ========== 分頁切換 (原有，自動支援新tab) ==========
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-                document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
-                btn.classList.add('active');
-                document.getElementById(btn.dataset.tab).classList.add('active');
+            }).catch(() => {
+                fallbackCopy(text, successMsg);
             });
-        });
-
-        // ========== 原有抽卡模擬器 UI ==========
-        const startBtn = document.getElementById('startSimBtn');
-        const queryBtn = document.getElementById('queryBtn');
-        const copyMatlabBtn = document.getElementById('copyMatlabBtn');
-        const progress = document.getElementById('simProgress');
-        const resultDiv = document.getElementById('gachaResult');
-        let sortedList = [], oList = [];
-
-        function resetGacha() {
-            document.getElementById('regNeed').value = 0;
-            document.getElementById('olNeed').value = 0;
-            document.getElementById('tlNeed').value = 0;
-            document.getElementById('coopNeed').value = 0;
-            document.getElementById('simTimes').value = 10000;
-            resultDiv.textContent = '未開始模擬，請設定參數後撳「開始模擬」。';
-            progress.value = 0;
-            sortedList = []; oList = [];
-            queryBtn.disabled = true;
-            copyMatlabBtn.disabled = true;
+        } else {
+            fallbackCopy(text, successMsg);
         }
-        document.getElementById('resetGachaBtn').addEventListener('click', resetGacha);
+    }
+    function fallbackCopy(text, successMsg) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = 0;
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            alert(successMsg);
+        } catch (err) {
+            alert(t('copy_fail'));
+        }
+        document.body.removeChild(textarea);
+    }
 
-        startBtn.addEventListener('click', async () => {
-            const reg = parseInt(document.getElementById('regNeed').value) || 0;
-            const ol = parseInt(document.getElementById('olNeed').value) || 0;
-            const tl = parseInt(document.getElementById('tlNeed').value) || 0;
-            const coop = parseInt(document.getElementById('coopNeed').value) || 0;
-            const times = parseInt(document.getElementById('simTimes').value) || 10000;
-            if (times <= 0) { alert('模擬次數要大過 0'); return; }
+    const module4 = [20000,20000,30000], module5 = [40000,50000,60000], module6 = [80000,100000,120000];
+    const uxp = [41715,58025,76125,106914,161200,255000];
+    const uc = [29389,46048,67255,104194,171616,297577];
+    const exp = [201211,290411,412411];
+    const ec = [235117,400823,618717];
 
-            startBtn.disabled = true;
-            queryBtn.disabled = true;
-            copyMatlabBtn.disabled = true;
-            resultDiv.textContent = '計緊數，請等等...';
-            progress.value = 0;
-            sortedList = []; oList = [];
+    function parseUpgradeLines(text) {
+        const lines = text.trim().split('\n');
+        const result = [];
+        for (let line of lines) {
+            const parts = line.trim().split(/\s+/);
+            if (parts.length === 4) {
+                const star = parseInt(parts[0]), beg = parseInt(parts[1]), end = parseInt(parts[2]), count = parseInt(parts[3]);
+                if (!isNaN(star) && !isNaN(beg) && !isNaN(end) && !isNaN(count))
+                    result.push([star, beg, end, count]);
+            }
+        }
+        return result;
+    }
+    function calcModuleCost(m4, m5, m6) {
+        let m4cost = 0, m5cost = 0, m6cost = 0;
+        if (m4[0]!==0) m4cost = m4[1]*module4[0] + m4[2]*module4[1] + m4[3]*module4[2];
+        if (m5[0]!==0) m5cost = m5[1]*module5[0] + m5[2]*module5[1] + m5[3]*module5[2];
+        if (m6[0]!==0) m6cost = m6[1]*module6[0] + m6[2]*module6[1] + m6[3]*module6[2];
+        return m4cost + m5cost + m6cost;
+    }
+    function calcTotalRequirements(upgradeLines, m4, m5, m6) {
+        let ecount = [0,0,0];
+        let count = [0,0,0,0,0,0];
+        for (let line of upgradeLines) {
+            const star = line[0], beg = line[1], end = line[2], n = line[3];
+            let b = beg;
+            if (b === 1) { ecount[star-4] += n; b = 230; }
+            const long = (end - b) / 10;
+            const short = (b - 230) / 10;
+            for (let i=0; i<long; i++) count[i] += n;
+            for (let i=0; i<short; i++) count[i] -= n;
+        }
+        let expNeeded = ecount.reduce((s,v,i)=> s + v*exp[i], 0);
+        let cashNeededEC = ecount.reduce((s,v,i)=> s + v*ec[i], 0);
+        expNeeded += count.reduce((s,v,i)=> s + v*uxp[i], 0);
+        let cashNeededUC = count.reduce((s,v,i)=> s + v*uc[i], 0);
+        const moduleCash = calcModuleCost(m4, m5, m6);
+        return { exp: expNeeded, cash: cashNeededEC + cashNeededUC + moduleCash };
+    }
 
-            const chunkSize = 500;
-            let results = [];
-            function runSimulationChunk(startIdx) {
-                const end = Math.min(startIdx + chunkSize, times);
-                for (let i=startIdx; i<end; i++) {
-                    results.push(total_gacha(reg, ol, tl, coop));
-                }
-                progress.value = (end / times) * 100;
-                if (end < times) {
-                    setTimeout(() => runSimulationChunk(end), 10);
-                } else {
-                    results.sort((a,b)=>a-b);
-                    sortedList = results;
-                    const n = sortedList.length;
-                    if (n===0) {
-                        resultDiv.textContent = '模擬結果：所有抽數為 0（請檢查係咪設定咗最少一個卡池目標）';
-                        startBtn.disabled = false;
-                        return;
-                    }
-                    const maxVal = sortedList[n-1];
-                    oList = new Array(maxVal).fill(0);
-                    sortedList.forEach(v => oList[v-1]++);
-                    
-                    const quantiles = [10,20,30,40,50,60,70,80,90,100];
-                    const quantVals = quantiles.map(q => sortedList[Math.floor(q/100 * n) - 1] || sortedList[0]);
-                    const mean = sortedList.reduce((a,b)=>a+b,0)/n;
-                    const variance = sortedList.reduce((s,x)=> s + (x-mean)**2, 0)/(n-1);
-                    const sd = Math.sqrt(variance);
-                    const cv = sd/mean;
-                    const ci99 = 2.58 * sd / Math.sqrt(n);
-                    const ci9999 = 3.72 * sd / Math.sqrt(n);
-                    
-                    let out = `總模擬次數: ${n}\n`;
-                    out += `平均所需抽數: ${mean.toFixed(2)}\n`;
-                    out += `中位數: ${quantVals[4].toFixed(2)}\n`;
-                    out += `標準差: ${sd.toFixed(2)}\n`;
-                    out += `變異係數: ${cv.toFixed(2)}\n`;
-                    out += `十分位數: ${quantVals.join(', ')}\n`;
-                    out += `99% 信賴區間: ${mean.toFixed(2)} ± ${ci99.toFixed(2)}\n`;
-                    out += `99.99% 信賴區間: ${mean.toFixed(2)} ± ${ci9999.toFixed(2)}\n`;
-                    out += `==================================================`;
-                    resultDiv.textContent = out;
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.tab).classList.add('active');
+            // 切換分頁後可能需要更新動態文字（例如模擬結果）
+            document.dispatchEvent(new CustomEvent('languageChanged'));
+        });
+    });
+
+    // Gacha UI
+    const startBtn = document.getElementById('startSimBtn');
+    const queryBtn = document.getElementById('queryBtn');
+    const copyMatlabBtn = document.getElementById('copyMatlabBtn');
+    const progress = document.getElementById('simProgress');
+    const resultDiv = document.getElementById('gachaResult');
+    let sortedList = [], oList = [];
+
+    function resetGacha() {
+        document.getElementById('regNeed').value = 0;
+        document.getElementById('olNeed').value = 0;
+        document.getElementById('tlNeed').value = 0;
+        document.getElementById('coopNeed').value = 0;
+        document.getElementById('simTimes').value = 10000;
+        resultDiv.textContent = t('gacha.result_initial');
+        progress.value = 0;
+        sortedList = []; oList = [];
+        queryBtn.disabled = true;
+        copyMatlabBtn.disabled = true;
+    }
+    document.getElementById('resetGachaBtn').addEventListener('click', resetGacha);
+
+    startBtn.addEventListener('click', async () => {
+        const reg = parseInt(document.getElementById('regNeed').value) || 0;
+        const ol = parseInt(document.getElementById('olNeed').value) || 0;
+        const tl = parseInt(document.getElementById('tlNeed').value) || 0;
+        const coop = parseInt(document.getElementById('coopNeed').value) || 0;
+        const times = parseInt(document.getElementById('simTimes').value) || 10000;
+        if (times <= 0) { alert(t('gacha.alert_times')); return; }
+
+        startBtn.disabled = true;
+        queryBtn.disabled = true;
+        copyMatlabBtn.disabled = true;
+        resultDiv.textContent = t('gacha.calculating');
+        progress.value = 0;
+        sortedList = []; oList = [];
+
+        const chunkSize = 500;
+        let results = [];
+        function runSimulationChunk(startIdx) {
+            const end = Math.min(startIdx + chunkSize, times);
+            for (let i=startIdx; i<end; i++) {
+                results.push(total_gacha(reg, ol, tl, coop));
+            }
+            progress.value = (end / times) * 100;
+            if (end < times) {
+                setTimeout(() => runSimulationChunk(end), 10);
+            } else {
+                results.sort((a,b)=>a-b);
+                sortedList = results;
+                const n = sortedList.length;
+                if (n===0) {
+                    resultDiv.textContent = t('gacha.result_zero');
                     startBtn.disabled = false;
-                    queryBtn.disabled = false;
-                    copyMatlabBtn.disabled = false;
+                    return;
                 }
+                const maxVal = sortedList[n-1];
+                oList = new Array(maxVal).fill(0);
+                sortedList.forEach(v => oList[v-1]++);
+                
+                const quantiles = [10,20,30,40,50,60,70,80,90,100];
+                const quantVals = quantiles.map(q => sortedList[Math.floor(q/100 * n) - 1] || sortedList[0]);
+                const mean = sortedList.reduce((a,b)=>a+b,0)/n;
+                const variance = sortedList.reduce((s,x)=> s + (x-mean)**2, 0)/(n-1);
+                const sd = Math.sqrt(variance);
+                const cv = sd/mean;
+                const ci99 = 2.58 * sd / Math.sqrt(n);
+                const ci9999 = 3.72 * sd / Math.sqrt(n);
+                
+                let out = t('gacha.result_total_sims', {n}) + '\n';
+                out += t('gacha.result_avg', {mean: mean.toFixed(2)}) + '\n';
+                out += t('gacha.result_median', {median: quantVals[4].toFixed(2)}) + '\n';
+                out += t('gacha.result_sd', {sd: sd.toFixed(2)}) + '\n';
+                out += t('gacha.result_cv', {cv: cv.toFixed(2)}) + '\n';
+                out += t('gacha.result_deciles', {deciles: quantVals.join(', ')}) + '\n';
+                out += t('gacha.result_ci99', {mean: mean.toFixed(2), ci: ci99.toFixed(2)}) + '\n';
+                out += t('gacha.result_ci9999', {mean: mean.toFixed(2), ci: ci9999.toFixed(2)}) + '\n';
+                out += '==================================================';
+                resultDiv.textContent = out;
+                startBtn.disabled = false;
+                queryBtn.disabled = false;
+                copyMatlabBtn.disabled = false;
             }
-            runSimulationChunk(0);
-        });
-
-        queryBtn.addEventListener('click', () => {
-            if (!sortedList.length) { alert('請先做一次模擬。'); return; }
-            const queryWin = document.createElement('div');
-            queryWin.style.position='fixed'; queryWin.style.top='30%'; queryWin.style.left='35%';
-            queryWin.style.background='#1e2533'; queryWin.style.padding='24px'; queryWin.style.borderRadius='20px';
-            queryWin.style.width='400px'; queryWin.style.zIndex='1000'; queryWin.style.boxShadow='0 0 30px black';
-            queryWin.innerHTML = `
-                <h3>🔎 查詢工具</h3>
-                <div style="margin:15px 0;"><label>抽數 → 成功率</label><br>
-                    <input id="qPull" type="number" placeholder="輸入抽數" style="width:100%">
-                    <button id="calcProbBtn">計算</button> <span id="probResult"></span>
-                </div>
-                <div><label>成功率 (%) → 所需抽數</label><br>
-                    <input id="qProb" type="number" step="0.1" placeholder="例如 90" style="width:100%">
-                    <button id="calcPullBtn">計算</button> <span id="pullResult"></span>
-                </div>
-                <button id="closeQuery" style="margin-top:20px;">關閉</button>
-            `;
-            document.body.appendChild(queryWin);
-            document.getElementById('calcProbBtn').addEventListener('click', ()=>{
-                const q = parseInt(document.getElementById('qPull').value);
-                if (isNaN(q) || q<=0 || q>oList.length) document.getElementById('probResult').textContent='抽數超出範圍';
-                else {
-                    const cum = oList.slice(0,q).reduce((a,b)=>a+b,0);
-                    const prob = cum / sortedList.length * 100;
-                    document.getElementById('probResult').textContent = `成功率: ${prob.toFixed(2)}%`;
-                }
-            });
-            document.getElementById('calcPullBtn').addEventListener('click', ()=>{
-                const p = parseFloat(document.getElementById('qProb').value);
-                if (isNaN(p) || p<=0 || p>100) document.getElementById('pullResult').textContent='百分比要喺 0~100 之間';
-                else {
-                    const idx = Math.floor(p/100 * sortedList.length) - 1;
-                    document.getElementById('pullResult').textContent = `至少需要: ${sortedList[Math.max(0,idx)]} 抽`;
-                }
-            });
-            document.getElementById('closeQuery').addEventListener('click', ()=> queryWin.remove());
-        });
-        // ▼ ==== 新增 MATLAB 複製按鈕事件 ==== ▼
-        copyMatlabBtn.addEventListener('click', () => {
-            if (!sortedList.length) {
-                alert('請先執行一次模擬。');
-                return;
-            }
-            const code = generateMatlabCode(sortedList, '明日方舟抽卡模擬');
-            copyToClipboard(code, 'MATLAB 代碼已複製到剪貼簿！請貼上至 MATLAB 執行。');
-        });
-        // ▲ ==== 新增結束 ==== ▲
-        // ========== 原有資源計算器 ==========
-        let reservedExp = 0, reservedCash = 0;
-        const reserveDisplay = document.getElementById('reserveDisplay');
-        const modal = document.getElementById('reserveModal');
-        
-        document.getElementById('setReserveBtn').addEventListener('click', ()=>{
-            modal.style.display = 'flex';
-            document.getElementById('modalUpgrade').value = document.getElementById('upgradeInput').value;
-            ['m4','m5','m6'].forEach((s,idx)=>{
-                const star = ['4','5','6'][idx];
-                for(let lvl=1;lvl<=3;lvl++){
-                    document.getElementById(`mm${star}L${lvl}`).value = document.getElementById(`m${star}L${lvl}`).value;
-                }
-            });
-            document.getElementById('modalReserveResult').textContent = '';
-        });
-        document.getElementById('closeModalBtn').addEventListener('click', ()=> modal.style.display='none');
-        document.getElementById('computeReserveBtn').addEventListener('click', ()=>{
-            const lines = parseUpgradeLines(document.getElementById('modalUpgrade').value);
-            const m4 = [ (document.getElementById('mm4L1').value!='0'||document.getElementById('mm4L2').value!='0'||document.getElementById('mm4L3').value!='0')?1:0,
-                         +document.getElementById('mm4L1').value, +document.getElementById('mm4L2').value, +document.getElementById('mm4L3').value ];
-            const m5 = [ (document.getElementById('mm5L1').value!='0'||document.getElementById('mm5L2').value!='0'||document.getElementById('mm5L3').value!='0')?1:0,
-                         +document.getElementById('mm5L1').value, +document.getElementById('mm5L2').value, +document.getElementById('mm5L3').value ];
-            const m6 = [ (document.getElementById('mm6L1').value!='0'||document.getElementById('mm6L2').value!='0'||document.getElementById('mm6L3').value!='0')?1:0,
-                         +document.getElementById('mm6L1').value, +document.getElementById('mm6L2').value, +document.getElementById('mm6L3').value ];
-            const req = calcTotalRequirements(lines, m4, m5, m6);
-            document.getElementById('modalReserveResult').textContent = `需求經驗儲備：${req.exp.toLocaleString()}　龍門幣：${req.cash.toLocaleString()}`;
-            modal._tempReserve = req;
-        });
-        document.getElementById('applyReserveBtn').addEventListener('click', ()=>{
-            if (modal._tempReserve) {
-                reservedExp = modal._tempReserve.exp;
-                reservedCash = modal._tempReserve.cash;
-                reserveDisplay.textContent = `目前儲備：經驗 ${reservedExp.toLocaleString()}　龍門幣 ${reservedCash.toLocaleString()}`;
-            }
-            modal.style.display = 'none';
-        });
-
-        document.getElementById('calcResourceBtn').addEventListener('click', ()=>{
-            const lines = parseUpgradeLines(document.getElementById('upgradeInput').value);
-            const m4 = [ (document.getElementById('m4L1').value!='0'||document.getElementById('m4L2').value!='0'||document.getElementById('m4L3').value!='0')?1:0,
-                         +document.getElementById('m4L1').value, +document.getElementById('m4L2').value, +document.getElementById('m4L3').value ];
-            const m5 = [ (document.getElementById('m5L1').value!='0'||document.getElementById('m5L2').value!='0'||document.getElementById('m5L3').value!='0')?1:0,
-                         +document.getElementById('m5L1').value, +document.getElementById('m5L2').value, +document.getElementById('m5L3').value ];
-            const m6 = [ (document.getElementById('m6L1').value!='0'||document.getElementById('m6L2').value!='0'||document.getElementById('m6L3').value!='0')?1:0,
-                         +document.getElementById('m6L1').value, +document.getElementById('m6L2').value, +document.getElementById('m6L3').value ];
-            const {exp: totalExp, cash: totalCash} = calcTotalRequirements(lines, m4, m5, m6);
-            
-            const remXP = (+document.getElementById('remXP1').value*2000 + +document.getElementById('remXP2').value*1000 +
-                           +document.getElementById('remXP3').value*400 + +document.getElementById('remXP4').value*200);
-            const remCash = +document.getElementById('remCash').value;
-            
-            let warning = '';
-            if (remXP < reservedExp) warning += `⚠️ 現有經驗儲備不足 (缺 ${(reservedExp-remXP).toLocaleString()})\n`;
-            if (remCash < reservedCash) warning += `⚠️ 現有龍門幣儲備不足 (缺 ${(reservedCash-remCash).toLocaleString()})\n`;
-            if (warning) {
-                document.getElementById('resourceResult').textContent = warning + '請盡快補充資源！';
-                return;
-            }
-            
-            let needExp = totalExp - (remXP - reservedExp);
-            let needCash = totalCash - (remCash - reservedCash);
-            if (needExp < 0) needExp = 0;
-            if (needCash < 0) needCash = 0;
-            
-            let dailyXP = +document.getElementById('dailyXP').value;
-            let dailyCash = +document.getElementById('dailyCash').value;
-            const energy = +document.getElementById('dailyEnergy').value;
-            if (document.getElementById('includeMission').checked) {
-                dailyXP += 9600 + 24400/7;
-                dailyCash += 9500 + 23000/7;
-            }
-            const baseDays = Math.max( dailyXP>0 ? Math.ceil(needExp/dailyXP) : 0,
-                                       dailyCash>0 ? Math.ceil(needCash/dailyCash) : 0 );
-            const energyToRes = (energy/36)*10000;
-            const mixDaysXP = (dailyXP+energyToRes)>0 ? Math.ceil(needExp/(dailyXP+energyToRes)) : 0;
-            const mixDaysCash = (dailyCash+energyToRes)>0 ? Math.ceil(needCash/(dailyCash+energyToRes)) : 0;
-            let mixDays = Math.max(mixDaysXP, mixDaysCash);
-            if (baseDays < mixDays) mixDays = baseDays;
-            const totalRes = needExp+needCash;
-            const dailyTotal = dailyXP+dailyCash+energyToRes;
-            if (dailyTotal>0) {
-                const mixDaysTotal = Math.ceil(totalRes/dailyTotal);
-                mixDays = Math.min(mixDays, mixDaysTotal);
-            }
-            
-            let out = `需要經驗總量：${needExp.toLocaleString()}\n需要龍門幣總量：${needCash.toLocaleString()}\n`;
-            out += `淨係靠基建產出需要：${baseDays} 日\n基建 + 體力刷圖需要：${mixDays} 日`;
-            if (reservedExp>0||reservedCash>0) out += `\n\n(已扣除資源儲備：經驗 ${reservedExp.toLocaleString()}，龍門幣 ${reservedCash.toLocaleString()})`;
-            document.getElementById('resourceResult').textContent = out;
-        });
-
-        document.getElementById('resetResourceBtn').addEventListener('click', ()=>{
-            document.getElementById('upgradeInput').value = '5 230 260 1\n6 1 290 1';
-            ['m4','m5','m6'].forEach(s=>{ for(let i=1;i<=3;i++) document.getElementById(s+'L'+i).value=0; });
-            document.getElementById('remXP1').value=0;document.getElementById('remXP2').value=0;
-            document.getElementById('remXP3').value=0;document.getElementById('remXP4').value=0;
-            document.getElementById('remCash').value=0;
-            document.getElementById('dailyXP').value=0; document.getElementById('dailyCash').value=0;
-            document.getElementById('dailyEnergy').value=240;
-            document.getElementById('includeMission').checked = false;
-            document.getElementById('resourceResult').textContent = '';
-            reservedExp = reservedCash = 0;
-            reserveDisplay.textContent = '目前儲備：經驗 0　龍門幣 0';
-        });
-
-        // ========== 原有抽數計算 ==========
-        document.getElementById('calcPullsBtn').addEventListener('click', ()=>{
-            const orundum = +document.getElementById('orundum').value;
-            const ten = +document.getElementById('tenPermits').value;
-            const single = +document.getElementById('permits').value;
-            const op = +document.getElementById('originite').value;
-            const pOnly = ten*10 + single;
-            const pullFromOrundum = Math.floor(orundum/600);
-            const pullFromOp = Math.floor((180*op + orundum)/600);
-            document.getElementById('pullsResult').textContent = 
-                `淨係用抽卡券&合成玉：${pOnly + pullFromOrundum} 抽\n使用所有抽卡資源：${pOnly + pullFromOp} 抽`;
-        });
-        document.getElementById('resetPullsBtn').addEventListener('click', ()=>{
-            document.getElementById('orundum').value=0; document.getElementById('tenPermits').value=0;
-            document.getElementById('permits').value=0; document.getElementById('originite').value=0;
-            document.getElementById('pullsResult').textContent = '';
-        });
-
-        // ========== 新增：終末地抽卡模擬 UI ==========
-        const efStartBtn = document.getElementById('startEfSimBtn');
-        const efQueryBtn = document.getElementById('efQueryBtn');
-        const efCopyMatlabBtn = document.getElementById('efCopyMatlabBtn');
-        const efProgress = document.getElementById('efProgress');
-        const efResultDiv = document.getElementById('efResult');
-        let efSortedList = [], efOList = [];
-
-        function resetEndfield() {
-            document.getElementById('efTarget').value = 1;
-            document.getElementById('efSimTimes').value = 10000;
-            efResultDiv.textContent = '未開始模擬，請設定參數後撳「開始模擬」。';
-            efProgress.value = 0;
-            efSortedList = [];
-            efOList = [];
-            efQueryBtn.disabled = true;
-            efCopyMatlabBtn.disabled = true;
         }
-        document.getElementById('resetEfBtn').addEventListener('click', resetEndfield);
+        runSimulationChunk(0);
+    });
 
-        efStartBtn.addEventListener('click', async () => {
-            const target = parseInt(document.getElementById('efTarget').value) || 1;
-            const times = parseInt(document.getElementById('efSimTimes').value) || 10000;
-            if (times <= 0) { alert('模擬次數要大過 0'); return; }
-            if (target <= 0) { alert('目標數量最少要 1'); return; }
+    queryBtn.addEventListener('click', () => {
+        if (!sortedList.length) { alert(t('gacha.alert_no_sim')); return; }
+        const queryWin = document.createElement('div');
+        Object.assign(queryWin.style, {
+            position:'fixed', top:'30%', left:'35%', background:'#1e2533',
+            padding:'24px', borderRadius:'20px', width:'400px', zIndex:'1000',
+            boxShadow:'0 0 30px black'
+        });
+        queryWin.innerHTML = `
+            <h3>🔎 ${t('gacha.query_title')}</h3>
+            <div style="margin:15px 0;"><label>${t('gacha.query_pull_to_prob')}</label><br>
+                <input id="qPull" type="number" placeholder="${t('gacha.query_placeholder_pull')}" style="width:100%">
+                <button id="calcProbBtn">${t('gacha.calc')}</button> <span id="probResult"></span>
+            </div>
+            <div><label>${t('gacha.query_prob_to_pull')}</label><br>
+                <input id="qProb" type="number" step="0.1" placeholder="${t('gacha.query_placeholder_prob')}" style="width:100%">
+                <button id="calcPullBtn">${t('gacha.calc')}</button> <span id="pullResult"></span>
+            </div>
+            <button id="closeQuery" style="margin-top:20px;">${t('gacha.close')}</button>
+        `;
+        document.body.appendChild(queryWin);
+        document.getElementById('calcProbBtn').addEventListener('click', ()=>{
+            const q = parseInt(document.getElementById('qPull').value);
+            if (isNaN(q) || q<=0 || q>oList.length) document.getElementById('probResult').textContent = t('gacha.query_out_of_range');
+            else {
+                const cum = oList.slice(0,q).reduce((a,b)=>a+b,0);
+                const prob = cum / sortedList.length * 100;
+                document.getElementById('probResult').textContent = t('gacha.query_prob_result', {prob: prob.toFixed(2)});
+            }
+        });
+        document.getElementById('calcPullBtn').addEventListener('click', ()=>{
+            const p = parseFloat(document.getElementById('qProb').value);
+            if (isNaN(p) || p<=0 || p>100) document.getElementById('pullResult').textContent = t('gacha.query_prob_range');
+            else {
+                const idx = Math.floor(p/100 * sortedList.length) - 1;
+                document.getElementById('pullResult').textContent = t('gacha.query_pull_result', {pulls: sortedList[Math.max(0,idx)]});
+            }
+        });
+        document.getElementById('closeQuery').addEventListener('click', ()=> queryWin.remove());
+    });
 
-            efStartBtn.disabled = true;
-            efQueryBtn.disabled = true;
-            efCopyMatlabBtn.disabled = true;
-            efResultDiv.textContent = '計緊數，請等等...';
-            efProgress.value = 0;
-            efSortedList = [];
-            efOList = [];
+    copyMatlabBtn.addEventListener('click', () => {
+        if (!sortedList.length) {
+            alert(t('gacha.alert_no_sim'));
+            return;
+        }
+        const code = generateMatlabCode(sortedList, t('matlab.arknights_title'));
+        copyToClipboard(code, t('gacha.copy_success'));
+    });
 
-            const chunkSize = 500;
-            let results = [];
-            function runEfSimulation(startIdx) {
-                const end = Math.min(startIdx + chunkSize, times);
-                for (let i = startIdx; i < end; i++) {
-                    results.push(endfield_total_gacha(target));
-                }
-                efProgress.value = (end / times) * 100;
-                if (end < times) {
-                    setTimeout(() => runEfSimulation(end), 10);
-                } else {
-                    results.sort((a,b)=>a-b);
-                    efSortedList = results;
-                    const n = efSortedList.length;
-                    if (n === 0) {
-                        efResultDiv.textContent = '模擬結果出錯，請再試一次。';
-                        efStartBtn.disabled = false;
-                        return;
-                    }
-                    const maxVal = efSortedList[n-1];
-                    efOList = new Array(maxVal).fill(0);
-                    efSortedList.forEach(v => efOList[v-1]++);
+    // Resource calculator
+    let reservedExp = 0, reservedCash = 0;
+    const reserveDisplay = document.getElementById('reserveDisplay');
+    const modal = document.getElementById('reserveModal');
+    
+    document.getElementById('setReserveBtn').addEventListener('click', ()=>{
+        modal.style.display = 'flex';
+        document.getElementById('modalUpgrade').value = document.getElementById('upgradeInput').value;
+        ['m4','m5','m6'].forEach((s,idx)=>{
+            const star = ['4','5','6'][idx];
+            for(let lvl=1;lvl<=3;lvl++){
+                document.getElementById(`mm${star}L${lvl}`).value = document.getElementById(`m${star}L${lvl}`).value;
+            }
+        });
+        document.getElementById('modalReserveResult').textContent = '';
+    });
+    document.getElementById('closeModalBtn').addEventListener('click', ()=> modal.style.display='none');
+    document.getElementById('computeReserveBtn').addEventListener('click', ()=>{
+        const lines = parseUpgradeLines(document.getElementById('modalUpgrade').value);
+        const m4 = [ (document.getElementById('mm4L1').value!='0'||document.getElementById('mm4L2').value!='0'||document.getElementById('mm4L3').value!='0')?1:0,
+                     +document.getElementById('mm4L1').value, +document.getElementById('mm4L2').value, +document.getElementById('mm4L3').value ];
+        const m5 = [ (document.getElementById('mm5L1').value!='0'||document.getElementById('mm5L2').value!='0'||document.getElementById('mm5L3').value!='0')?1:0,
+                     +document.getElementById('mm5L1').value, +document.getElementById('mm5L2').value, +document.getElementById('mm5L3').value ];
+        const m6 = [ (document.getElementById('mm6L1').value!='0'||document.getElementById('mm6L2').value!='0'||document.getElementById('mm6L3').value!='0')?1:0,
+                     +document.getElementById('mm6L1').value, +document.getElementById('mm6L2').value, +document.getElementById('mm6L3').value ];
+        const req = calcTotalRequirements(lines, m4, m5, m6);
+        document.getElementById('modalReserveResult').textContent = 
+            t('modal.reserve_result', {exp: req.exp.toLocaleString(), cash: req.cash.toLocaleString()});
+        modal._tempReserve = req;
+    });
+    document.getElementById('applyReserveBtn').addEventListener('click', ()=>{
+        if (modal._tempReserve) {
+            reservedExp = modal._tempReserve.exp;
+            reservedCash = modal._tempReserve.cash;
+            reserveDisplay.textContent = t('resource.reserve_display_current', {exp: reservedExp.toLocaleString(), cash: reservedCash.toLocaleString()});
+        }
+        modal.style.display = 'none';
+    });
 
-                    const quantiles = [10,20,30,40,50,60,70,80,90,100];
-                    const quantVals = quantiles.map(q => efSortedList[Math.floor(q/100 * n) - 1] || efSortedList[0]);
-                    const mean = efSortedList.reduce((a,b)=>a+b,0)/n;
-                    const variance = efSortedList.reduce((s,x)=> s + (x-mean)**2, 0)/(n-1);
-                    const sd = Math.sqrt(variance);
-                    const cv = sd/mean;
-                    const ci99 = 2.58 * sd / Math.sqrt(n);
-                    const ci9999 = 3.72 * sd / Math.sqrt(n);
+    document.getElementById('calcResourceBtn').addEventListener('click', ()=>{
+        const lines = parseUpgradeLines(document.getElementById('upgradeInput').value);
+        const m4 = [ (document.getElementById('m4L1').value!='0'||document.getElementById('m4L2').value!='0'||document.getElementById('m4L3').value!='0')?1:0,
+                     +document.getElementById('m4L1').value, +document.getElementById('m4L2').value, +document.getElementById('m4L3').value ];
+        const m5 = [ (document.getElementById('m5L1').value!='0'||document.getElementById('m5L2').value!='0'||document.getElementById('m5L3').value!='0')?1:0,
+                     +document.getElementById('m5L1').value, +document.getElementById('m5L2').value, +document.getElementById('m5L3').value ];
+        const m6 = [ (document.getElementById('m6L1').value!='0'||document.getElementById('m6L2').value!='0'||document.getElementById('m6L3').value!='0')?1:0,
+                     +document.getElementById('m6L1').value, +document.getElementById('m6L2').value, +document.getElementById('m6L3').value ];
+        const {exp: totalExp, cash: totalCash} = calcTotalRequirements(lines, m4, m5, m6);
+        
+        const remXP = (+document.getElementById('remXP1').value*2000 + +document.getElementById('remXP2').value*1000 +
+                       +document.getElementById('remXP3').value*400 + +document.getElementById('remXP4').value*200);
+        const remCash = +document.getElementById('remCash').value;
+        
+        let warning = '';
+        if (remXP < reservedExp) warning += t('resource.warning_exp', {diff: (reservedExp-remXP).toLocaleString()}) + '\n';
+        if (remCash < reservedCash) warning += t('resource.warning_cash', {diff: (reservedCash-remCash).toLocaleString()}) + '\n';
+        if (warning) {
+            document.getElementById('resourceResult').textContent = warning + t('resource.warning_refill');
+            return;
+        }
+        
+        let needExp = totalExp - (remXP - reservedExp);
+        let needCash = totalCash - (remCash - reservedCash);
+        if (needExp < 0) needExp = 0;
+        if (needCash < 0) needCash = 0;
+        
+        let dailyXP = +document.getElementById('dailyXP').value;
+        let dailyCash = +document.getElementById('dailyCash').value;
+        const energy = +document.getElementById('dailyEnergy').value;
+        if (document.getElementById('includeMission').checked) {
+            dailyXP += 9600 + 24400/7;
+            dailyCash += 9500 + 23000/7;
+        }
+        const baseDays = Math.max( dailyXP>0 ? Math.ceil(needExp/dailyXP) : 0,
+                                   dailyCash>0 ? Math.ceil(needCash/dailyCash) : 0 );
+        const energyToRes = (energy/36)*10000;
+        const mixDaysXP = (dailyXP+energyToRes)>0 ? Math.ceil(needExp/(dailyXP+energyToRes)) : 0;
+        const mixDaysCash = (dailyCash+energyToRes)>0 ? Math.ceil(needCash/(dailyCash+energyToRes)) : 0;
+        let mixDays = Math.max(mixDaysXP, mixDaysCash);
+        if (baseDays < mixDays) mixDays = baseDays;
+        const totalRes = needExp+needCash;
+        const dailyTotal = dailyXP+dailyCash+energyToRes;
+        if (dailyTotal>0) {
+            const mixDaysTotal = Math.ceil(totalRes/dailyTotal);
+            mixDays = Math.min(mixDays, mixDaysTotal);
+        }
+        
+        let out = t('resource.result_need_exp', {exp: needExp.toLocaleString()}) + '\n';
+        out += t('resource.result_need_cash', {cash: needCash.toLocaleString()}) + '\n';
+        out += t('resource.result_days_base', {days: baseDays}) + '\n';
+        out += t('resource.result_days_mix', {days: mixDays});
+        if (reservedExp>0||reservedCash>0) {
+            out += '\n\n' + t('resource.result_reserve_note', {exp: reservedExp.toLocaleString(), cash: reservedCash.toLocaleString()});
+        }
+        document.getElementById('resourceResult').textContent = out;
+    });
 
-                    let out = `目標數量: ${target}\n`;
-                    out += `總模擬次數: ${n}\n`;
-                    out += `平均所需抽數: ${mean.toFixed(2)}\n`;
-                    out += `中位數: ${quantVals[4].toFixed(2)}\n`;
-                    out += `標準差: ${sd.toFixed(2)}\n`;
-                    out += `變異係數: ${cv.toFixed(2)}\n`;
-                    out += `十分位數: ${quantVals.join(', ')}\n`;
-                    out += `99% 信賴區間: ${mean.toFixed(2)} ± ${ci99.toFixed(2)}\n`;
-                    out += `99.99% 信賴區間: ${mean.toFixed(2)} ± ${ci9999.toFixed(2)}\n`;
-                    out += `==================================================`;
-                    efResultDiv.textContent = out;
+    document.getElementById('resetResourceBtn').addEventListener('click', ()=>{
+        document.getElementById('upgradeInput').value = '5 230 260 1\n6 1 290 1';
+        ['m4','m5','m6'].forEach(s=>{ for(let i=1;i<=3;i++) document.getElementById(s+'L'+i).value=0; });
+        document.getElementById('remXP1').value=0;document.getElementById('remXP2').value=0;
+        document.getElementById('remXP3').value=0;document.getElementById('remXP4').value=0;
+        document.getElementById('remCash').value=0;
+        document.getElementById('dailyXP').value=0; document.getElementById('dailyCash').value=0;
+        document.getElementById('dailyEnergy').value=240;
+        document.getElementById('includeMission').checked = false;
+        document.getElementById('resourceResult').textContent = '';
+        reservedExp = reservedCash = 0;
+        reserveDisplay.textContent = t('resource.reserve_display_default');
+    });
+
+    // Pulls calculator
+    document.getElementById('calcPullsBtn').addEventListener('click', ()=>{
+        const orundum = +document.getElementById('orundum').value;
+        const ten = +document.getElementById('tenPermits').value;
+        const single = +document.getElementById('permits').value;
+        const op = +document.getElementById('originite').value;
+        const pOnly = ten*10 + single;
+        const pullFromOrundum = Math.floor(orundum/600);
+        const pullFromOp = Math.floor((180*op + orundum)/600);
+        document.getElementById('pullsResult').textContent = 
+            t('pulls.result_tickets', {pulls: pOnly + pullFromOrundum}) + '\n' +
+            t('pulls.result_all', {pulls: pOnly + pullFromOp});
+    });
+    document.getElementById('resetPullsBtn').addEventListener('click', ()=>{
+        document.getElementById('orundum').value=0; document.getElementById('tenPermits').value=0;
+        document.getElementById('permits').value=0; document.getElementById('originite').value=0;
+        document.getElementById('pullsResult').textContent = '';
+    });
+
+    // Endfield gacha UI
+    const efStartBtn = document.getElementById('startEfSimBtn');
+    const efQueryBtn = document.getElementById('efQueryBtn');
+    const efCopyMatlabBtn = document.getElementById('efCopyMatlabBtn');
+    const efProgress = document.getElementById('efProgress');
+    const efResultDiv = document.getElementById('efResult');
+    let efSortedList = [], efOList = [];
+
+    function resetEndfield() {
+        document.getElementById('efTarget').value = 1;
+        document.getElementById('efSimTimes').value = 10000;
+        efResultDiv.textContent = t('endfield.result_initial');
+        efProgress.value = 0;
+        efSortedList = [];
+        efOList = [];
+        efQueryBtn.disabled = true;
+        efCopyMatlabBtn.disabled = true;
+    }
+    document.getElementById('resetEfBtn').addEventListener('click', resetEndfield);
+
+    efStartBtn.addEventListener('click', async () => {
+        const target = parseInt(document.getElementById('efTarget').value) || 1;
+        const times = parseInt(document.getElementById('efSimTimes').value) || 10000;
+        if (times <= 0) { alert(t('endfield.alert_times')); return; }
+        if (target <= 0) { alert(t('endfield.alert_target')); return; }
+
+        efStartBtn.disabled = true;
+        efQueryBtn.disabled = true;
+        efCopyMatlabBtn.disabled = true;
+        efResultDiv.textContent = t('endfield.calculating');
+        efProgress.value = 0;
+        efSortedList = [];
+        efOList = [];
+
+        const chunkSize = 500;
+        let results = [];
+        function runEfSimulation(startIdx) {
+            const end = Math.min(startIdx + chunkSize, times);
+            for (let i = startIdx; i < end; i++) results.push(endfield_total_gacha(target));
+            efProgress.value = (end / times) * 100;
+            if (end < times) {
+                setTimeout(() => runEfSimulation(end), 10);
+            } else {
+                results.sort((a,b)=>a-b);
+                efSortedList = results;
+                const n = efSortedList.length;
+                if (n === 0) {
+                    efResultDiv.textContent = t('endfield.result_error');
                     efStartBtn.disabled = false;
-                    efQueryBtn.disabled = false;
-                    efCopyMatlabBtn.disabled = false;
+                    return;
                 }
-            }
-            runEfSimulation(0);
-        });
+                const maxVal = efSortedList[n-1];
+                efOList = new Array(maxVal).fill(0);
+                efSortedList.forEach(v => efOList[v-1]++);
 
-        efQueryBtn.addEventListener('click', () => {
-            if (!efSortedList.length) { alert('請先做一次模擬。'); return; }
-            const queryWin = document.createElement('div');
-            queryWin.style.position='fixed'; queryWin.style.top='30%'; queryWin.style.left='35%';
-            queryWin.style.background='#1e2533'; queryWin.style.padding='24px'; queryWin.style.borderRadius='20px';
-            queryWin.style.width='400px'; queryWin.style.zIndex='1000'; queryWin.style.boxShadow='0 0 30px black';
-            queryWin.innerHTML = `
-                <h3>🔎 終末地查詢工具</h3>
-                <div style="margin:15px 0;"><label>抽數 → 成功率</label><br>
-                    <input id="efQPull" type="number" placeholder="輸入抽數" style="width:100%">
-                    <button id="efCalcProbBtn">計算</button> <span id="efProbResult"></span>
-                </div>
-                <div><label>成功率 (%) → 所需抽數</label><br>
-                    <input id="efQProb" type="number" step="0.1" placeholder="例如 90" style="width:100%">
-                    <button id="efCalcPullBtn">計算</button> <span id="efPullResult"></span>
-                </div>
-                <button id="efCloseQuery" style="margin-top:20px;">關閉</button>
-            `;
-            document.body.appendChild(queryWin);
-            document.getElementById('efCalcProbBtn').addEventListener('click', ()=>{
-                const q = parseInt(document.getElementById('efQPull').value);
-                if (isNaN(q) || q<=0 || q>efOList.length) document.getElementById('efProbResult').textContent='抽數超出範圍';
-                else {
-                    const cum = efOList.slice(0,q).reduce((a,b)=>a+b,0);
-                    const prob = cum / efSortedList.length * 100;
-                    document.getElementById('efProbResult').textContent = `成功率: ${prob.toFixed(2)}%`;
-                }
-            });
-            document.getElementById('efCalcPullBtn').addEventListener('click', ()=>{
-                const p = parseFloat(document.getElementById('efQProb').value);
-                if (isNaN(p) || p<=0 || p>100) document.getElementById('efPullResult').textContent='百分比要喺 0~100 之間';
-                else {
-                    const idx = Math.floor(p/100 * efSortedList.length) - 1;
-                    document.getElementById('efPullResult').textContent = `至少需要: ${efSortedList[Math.max(0,idx)]} 抽`;
-                }
-            });
-            document.getElementById('efCloseQuery').addEventListener('click', ()=> queryWin.remove());
-        });
-        // ▼ ==== 新增終末地 MATLAB 複製按鈕事件 ==== ▼
-        efCopyMatlabBtn.addEventListener('click', () => {
-            if (!efSortedList.length) {
-                alert('請先執行一次模擬。');
-                return;
+                const quantiles = [10,20,30,40,50,60,70,80,90,100];
+                const quantVals = quantiles.map(q => efSortedList[Math.floor(q/100 * n) - 1] || efSortedList[0]);
+                const mean = efSortedList.reduce((a,b)=>a+b,0)/n;
+                const variance = efSortedList.reduce((s,x)=> s + (x-mean)**2, 0)/(n-1);
+                const sd = Math.sqrt(variance);
+                const cv = sd/mean;
+                const ci99 = 2.58 * sd / Math.sqrt(n);
+                const ci9999 = 3.72 * sd / Math.sqrt(n);
+
+                let out = t('endfield.result_target', {target}) + '\n';
+                out += t('endfield.result_total_sims', {n}) + '\n';
+                out += t('endfield.result_avg', {mean: mean.toFixed(2)}) + '\n';
+                out += t('endfield.result_median', {median: quantVals[4].toFixed(2)}) + '\n';
+                out += t('endfield.result_sd', {sd: sd.toFixed(2)}) + '\n';
+                out += t('endfield.result_cv', {cv: cv.toFixed(2)}) + '\n';
+                out += t('endfield.result_deciles', {deciles: quantVals.join(', ')}) + '\n';
+                out += t('endfield.result_ci99', {mean: mean.toFixed(2), ci: ci99.toFixed(2)}) + '\n';
+                out += t('endfield.result_ci9999', {mean: mean.toFixed(2), ci: ci9999.toFixed(2)}) + '\n';
+                out += '==================================================';
+                efResultDiv.textContent = out;
+                efStartBtn.disabled = false;
+                efQueryBtn.disabled = false;
+                efCopyMatlabBtn.disabled = false;
             }
-            const code = generateMatlabCode(efSortedList, '終末地抽卡模擬');
-            copyToClipboard(code, 'MATLAB 代碼已複製到剪貼簿！請貼上至 MATLAB 執行。');
+        }
+        runEfSimulation(0);
+    });
+
+    efQueryBtn.addEventListener('click', () => {
+        if (!efSortedList.length) { alert(t('endfield.alert_no_sim')); return; }
+        const queryWin = document.createElement('div');
+        Object.assign(queryWin.style, {
+            position:'fixed', top:'30%', left:'35%', background:'#1e2533',
+            padding:'24px', borderRadius:'20px', width:'400px', zIndex:'1000',
+            boxShadow:'0 0 30px black'
         });
-        // ▲ ==== 新增結束 ==== ▲
-        // 鍵盤快捷鍵 (Ctrl+數字) 支援新分頁
-        window.addEventListener('keydown', (e)=>{
-            if (e.ctrlKey) {
-                if (e.key === '1') document.querySelector('[data-tab="gacha"]').click();
-                else if (e.key === '2') document.querySelector('[data-tab="resource"]').click();
-                else if (e.key === '3') document.querySelector('[data-tab="pulls"]').click();
-                else if (e.key === '4') document.querySelector('[data-tab="endfield"]').click();
+        queryWin.innerHTML = `
+            <h3>🔎 ${t('endfield.query_title')}</h3>
+            <div style="margin:15px 0;"><label>${t('endfield.query_pull_to_prob')}</label><br>
+                <input id="efQPull" type="number" placeholder="${t('endfield.query_placeholder_pull')}" style="width:100%">
+                <button id="efCalcProbBtn">${t('endfield.calc')}</button> <span id="efProbResult"></span>
+            </div>
+            <div><label>${t('endfield.query_prob_to_pull')}</label><br>
+                <input id="efQProb" type="number" step="0.1" placeholder="${t('endfield.query_placeholder_prob')}" style="width:100%">
+                <button id="efCalcPullBtn">${t('endfield.calc')}</button> <span id="efPullResult"></span>
+            </div>
+            <button id="efCloseQuery" style="margin-top:20px;">${t('endfield.close')}</button>
+        `;
+        document.body.appendChild(queryWin);
+        document.getElementById('efCalcProbBtn').addEventListener('click', ()=>{
+            const q = parseInt(document.getElementById('efQPull').value);
+            if (isNaN(q) || q<=0 || q>efOList.length) document.getElementById('efProbResult').textContent = t('endfield.query_out_of_range');
+            else {
+                const cum = efOList.slice(0,q).reduce((a,b)=>a+b,0);
+                const prob = cum / efSortedList.length * 100;
+                document.getElementById('efProbResult').textContent = t('endfield.query_prob_result', {prob: prob.toFixed(2)});
             }
         });
-    })();
+        document.getElementById('efCalcPullBtn').addEventListener('click', ()=>{
+            const p = parseFloat(document.getElementById('efQProb').value);
+            if (isNaN(p) || p<=0 || p>100) document.getElementById('efPullResult').textContent = t('endfield.query_prob_range');
+            else {
+                const idx = Math.floor(p/100 * efSortedList.length) - 1;
+                document.getElementById('efPullResult').textContent = t('endfield.query_pull_result', {pulls: efSortedList[Math.max(0,idx)]});
+            }
+        });
+        document.getElementById('efCloseQuery').addEventListener('click', ()=> queryWin.remove());
+    });
+
+    efCopyMatlabBtn.addEventListener('click', () => {
+        if (!efSortedList.length) {
+            alert(t('endfield.alert_no_sim'));
+            return;
+        }
+        const code = generateMatlabCode(efSortedList, t('matlab.endfield_title'));
+        copyToClipboard(code, t('endfield.copy_success'));
+    });
+
+    // 鍵盤快捷鍵
+    window.addEventListener('keydown', (e)=>{
+        if (e.ctrlKey) {
+            if (e.key === '1') document.querySelector('[data-tab="gacha"]').click();
+            else if (e.key === '2') document.querySelector('[data-tab="resource"]').click();
+            else if (e.key === '3') document.querySelector('[data-tab="pulls"]').click();
+            else if (e.key === '4') document.querySelector('[data-tab="endfield"]').click();
+        }
+    });
+
+    // 語言變更時，部分動態內容需要重新渲染 (例如模擬結果如果已經顯示)
+    document.addEventListener('languageChanged', () => {
+        // 根據當前分頁更新靜態結果區塊（如果佢哋冇被清空）
+        if (sortedList.length && document.getElementById('gacha').classList.contains('active')) {
+            // 重新觸發一次模擬結果顯示（太複雜，簡單啲：唔自動 refresh，叫用戶再計一次）
+            // 或者留空，因為動態結果通常係用戶操作後先出現，切換語言時多數未進行模擬
+        }
+        // 資源計算結果同樣
+        // 為咗簡單，可以唔做自動更新，因為用戶可以撳多次計數掣。
+        // 但係儲備顯示需要更新：
+        if (reservedExp>0 || reservedCash>0) {
+            reserveDisplay.textContent = t('resource.reserve_display_current', {exp: reservedExp.toLocaleString(), cash: reservedCash.toLocaleString()});
+        } else {
+            reserveDisplay.textContent = t('resource.reserve_display_default');
+        }
+        // 更新 modal 結果（如果開住）
+        if (modal.style.display === 'flex' && modal._tempReserve) {
+            document.getElementById('modalReserveResult').textContent = 
+                t('modal.reserve_result', {exp: modal._tempReserve.exp.toLocaleString(), cash: modal._tempReserve.cash.toLocaleString()});
+        }
+    });
+
+    // 初始化語言
+    buildLangSwitcher();
+    loadLanguage(detectLanguage());
+
+})();
 </script>
 </body>
 </html>
