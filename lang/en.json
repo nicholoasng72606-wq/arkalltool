@@ -130,7 +130,7 @@
   },
   "matlab": {
     "auto_generated": "Gacha simulation result (auto-generated)",
-    "instruction": "Run in MATLAB with Statistics and Machine Learning Toolbox",
+    "instruction": "Run in MATLAB",
     "plot_pdf": "Plot PDF (probability density function)",
     "pdf_title": "Probability Density Function (PDF)",
     "pulls": "Pulls needed",
