@@ -63,13 +63,6 @@
 2. 也可以將整個倉庫下載後，用任意靜態伺服器（如 Live Server）開啟 `index.html` 即可運行。
 3. 所有計算均在**瀏覽器端執行**，無需後端服務。
 
-## 🛠 技術細節
-
-- **抽卡邏輯**完整實現遊戲內保底機制（含軟保底遞增機率）。
-- 蒙地卡羅模擬使用 `setTimeout` 切片執行，避免大量迴圈時主執行緒卡死。。
-- MATLAB 代碼自動生成完整的繪圖指令，包含 `ecdf` 多信賴區間繪製。
-
-
 # ⚔️ Rhodes Island Logistics Terminal
 
 A **web-based tool** designed for *Arknights* and *Arknights: Endfield* players. It integrates gacha simulation, resource requirement calculation, and pull currency conversion, helping Doctors efficiently plan their in-game resources and pulling strategies.
