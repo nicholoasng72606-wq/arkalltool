@@ -516,9 +516,9 @@
         return total;
     }
 
-    function generateMatlabCode(sortedList, title) {
-        const dataStr = sortedList.join(' ');
-        return `% ${title} - ${t('matlab.auto_generated')}
+   function generateMatlabCode(sortedList, title) {
+    const dataStr = sortedList.join(' ');
+    return `% ${title} - ${t('matlab.auto_generated')}
 % ${t('matlab.instruction')}
 data = [${dataStr}];
 
@@ -534,18 +534,65 @@ grid on;
 % ${t('matlab.plot_cdf')}
 figure('Name','${title} CDF with multiple CIs');
 
-[f, x] = ecdf(data);
-plot(x, f, 'b-', 'LineWidth', 2);
+n = length(data);
+sortedData = sort(data);
+p = (1:n)' / n;
+
+x_cdf = zeros(2*n, 1);
+y_cdf = zeros(2*n, 1);
+for i = 1:n
+    x_cdf(2*i-1) = sortedData(i);
+    x_cdf(2*i)   = sortedData(i);
+    if i == 1
+        y_cdf(1) = 0;
+        y_cdf(2) = p(1);
+    else
+        y_cdf(2*i-1) = y_cdf(2*i-2);
+        y_cdf(2*i)   = p(i);
+    end
+end
+plot(x_cdf, y_cdf, 'b-', 'LineWidth', 2);
 hold on;
 
-[f90, x90, flo90, fup90] = ecdf(data, 'Alpha', 0.10);
-plot(x90, flo90, 'r--', x90, fup90, 'r--');
+z90 = 1.645;
+z99 = 2.576;
+z9999 = 3.891;
+se = sqrt(p .* (1-p) / n);
+ci90_lo = max(0, p - z90 * se);
+ci90_hi = min(1, p + z90 * se);
+ci99_lo = max(0, p - z99 * se);
+ci99_hi = min(1, p + z99 * se);
+ci9999_lo = max(0, p - z9999 * se);
+ci9999_hi = min(1, p + z9999 * se);
 
-[f99, x99, flo99, fup99] = ecdf(data, 'Alpha', 0.01);
-plot(x99, flo99, 'g--', x99, fup99, 'g--');
+x_ci = x_cdf;
+y_ci90_lo = zeros(2*n, 1); y_ci90_hi = zeros(2*n, 1);
+y_ci99_lo = zeros(2*n, 1); y_ci99_hi = zeros(2*n, 1);
+y_ci9999_lo = zeros(2*n, 1); y_ci9999_hi = zeros(2*n, 1);
+for i = 1:n
+    if i == 1
+        y_ci90_lo(1)=0;   y_ci90_lo(2)=ci90_lo(1);
+        y_ci90_hi(1)=0;   y_ci90_hi(2)=ci90_hi(1);
+        y_ci99_lo(1)=0;   y_ci99_lo(2)=ci99_lo(1);
+        y_ci99_hi(1)=0;   y_ci99_hi(2)=ci99_hi(1);
+        y_ci9999_lo(1)=0; y_ci9999_lo(2)=ci9999_lo(1);
+        y_ci9999_hi(1)=0; y_ci9999_hi(2)=ci9999_hi(1);
+    else
+        y_ci90_lo(2*i-1)=y_ci90_lo(2*i-2); y_ci90_lo(2*i)=ci90_lo(i);
+        y_ci90_hi(2*i-1)=y_ci90_hi(2*i-2); y_ci90_hi(2*i)=ci90_hi(i);
+        y_ci99_lo(2*i-1)=y_ci99_lo(2*i-2); y_ci99_lo(2*i)=ci99_lo(i);
+        y_ci99_hi(2*i-1)=y_ci99_hi(2*i-2); y_ci99_hi(2*i)=ci99_hi(i);
+        y_ci9999_lo(2*i-1)=y_ci9999_lo(2*i-2); y_ci9999_lo(2*i)=ci9999_lo(i);
+        y_ci9999_hi(2*i-1)=y_ci9999_hi(2*i-2); y_ci9999_hi(2*i)=ci9999_hi(i);
+    end
+end
 
-[f9999, x9999, flo9999, fup9999] = ecdf(data, 'Alpha', 0.0001);
-plot(x9999, flo9999, 'm--', x9999, fup9999, 'm--');
+plot(x_ci, y_ci90_lo, 'r--');
+plot(x_ci, y_ci90_hi, 'r--');
+plot(x_ci, y_ci99_lo, 'g--');
+plot(x_ci, y_ci99_hi, 'g--');
+plot(x_ci, y_ci9999_lo, 'm--');
+plot(x_ci, y_ci9999_hi, 'm--');
 
 title('${title} - ${t('matlab.cdf_title')}');
 xlabel('${t('matlab.pulls')}');
@@ -556,8 +603,9 @@ legend('CDF', ...
        '${t('matlab.ci9999_lower')}', '${t('matlab.ci9999_upper')}', ...
        'Location', 'best');
 grid on;
+hold off;
 `;
-    }
+}
 
     function copyToClipboard(text, successMsg) {
         if (navigator.clipboard && navigator.clipboard.writeText) {
