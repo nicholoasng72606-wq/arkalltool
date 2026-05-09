@@ -8,9 +8,9 @@
     "endfield": "🌌 Endfield Gacha"
   },
   "gacha": {
-    "label_reg": "Standard banners:",
-    "label_ol": "Single rate-up limited:",
-    "label_tl": "Double rate-up limited:",
+    "label_reg": "Special banners:",
+    "label_ol": "Single target limited:",
+    "label_tl": "Dual target limited:",
     "label_coop": "Collaboration banners:",
     "label_simtimes": "Simulation runs:",
     "sim_button": "▶ Start Simulation",
@@ -86,7 +86,7 @@
     "result_all": "Using all resources: {{pulls}} pulls"
   },
   "endfield": {
-    "label_target": "🎯 Endfield targets:",
+    "label_target": "🎯 Endfield banners:",
     "label_simtimes": "🔁 Simulation runs:",
     "sim_button": "▶ Start Simulation",
     "query_button": "🔍 Query Probability/Pulls",
