@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -41,6 +42,9 @@
             </div>
             <progress id="simProgress" value="0" max="100"></progress>
             <div id="gachaResult" class="result-box" data-i18n="gacha.result_initial">未開始模擬，請設定參數後撳「開始模擬」。</div>
+            <div style="width:100%; margin: 20px auto 0 auto; background:#1a1f2e; padding:0; border-radius:12px; display:none;" id="gachaChartContainer">
+                <canvas id="gachaChart" style="width:100%;"></canvas>
+            </div>
         </div>
     </div>
 
