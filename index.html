@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>明日方舟 + 終末地 綜合工具</title>
-    <link rel="stylesheet" href="style.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <div class="app-container">
@@ -24,36 +25,62 @@
         <button class="tab-btn" data-tab="endfield" data-i18n="tabs.endfield">🌌 終末地抽卡</button>
     </div>
 
-    <!-- 抽卡模擬器分頁 -->
+    <!-- ==================== 抽卡模擬器 ==================== -->
     <div id="gacha" class="tab-pane active">
         <div class="card">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 12px;">
-                <div><label data-i18n="gacha.label_reg">常駐卡池數量：</label><br><input type="number" id="regNeed" value="0" min="0" step="1" class="small-input"></div>
-                <div><label data-i18n="gacha.label_ol">單目標限定池：</label><br><input type="number" id="olNeed" value="0" min="0" step="1" class="small-input"></div>
-                <div><label data-i18n="gacha.label_tl">雙目標限定池：</label><br><input type="number" id="tlNeed" value="0" min="0" step="1" class="small-input"></div>
-                <div><label data-i18n="gacha.label_coop">聯動卡池數量：</label><br><input type="number" id="coopNeed" value="0" min="0" step="1" class="small-input"></div>
-                <div><label data-i18n="gacha.label_simtimes">模擬次數：</label><br><input type="number" id="simTimes" value="10000" min="100" step="1000" style="width: 150px;"></div>
+                <div><label data-i18n="gacha.label_reg">常駐卡池數量：</label><br /><input type="number" id="regNeed" value="0" min="0" step="1" class="small-input" /></div>
+                <div><label data-i18n="gacha.label_ol">單目標限定池：</label><br /><input type="number" id="olNeed" value="0" min="0" step="1" class="small-input" /></div>
+                <div><label data-i18n="gacha.label_tl">雙目標限定池：</label><br /><input type="number" id="tlNeed" value="0" min="0" step="1" class="small-input" /></div>
+                <div><label data-i18n="gacha.label_coop">聯動卡池數量：</label><br /><input type="number" id="coopNeed" value="0" min="0" step="1" class="small-input" /></div>
+                <div><label data-i18n="gacha.label_simtimes">模擬次數：</label><br /><input type="number" id="simTimes" value="10000" min="100" step="1000" style="width:150px;" /></div>
             </div>
-            <div style="margin-top: 20px; display: flex; gap: 16px; flex-wrap: wrap;">
+            <div style="margin-top:20px; display:flex; gap:16px; flex-wrap:wrap;">
                 <button id="startSimBtn" data-i18n="gacha.sim_button">▶ 開始模擬</button>
-                <button id="queryBtn" disabled data-i18n="gacha.query_button">🔍 查詢概率 / 所需抽數</button>
                 <button id="copyMatlabBtn" disabled data-i18n="gacha.copy_matlab">📋 複製 MATLAB 代碼</button>
                 <button id="resetGachaBtn" style="background:#3f4d5e;" data-i18n="gacha.reset">⟲ 重置</button>
             </div>
             <progress id="simProgress" value="0" max="100"></progress>
+
+            <!-- 模擬時間顯示 -->
             <div id="simTime" style="color:#9fc5ff; margin:8px 0; font-size:14px; display:none;">
                 <span data-i18n="gacha.sim_time_prefix">⏱️ 模擬時間：</span>
                 <span id="timeDisplay">0.00</span>
                 <span data-i18n="gacha.sim_time_suffix">秒</span>
             </div>
+
             <div id="gachaResult" class="result-box" data-i18n="gacha.result_initial">未開始模擬，請設定參數後撳「開始模擬」。</div>
+
+            <!-- 內嵌查詢面板 -->
+            <div id="gachaQueryPanel" style="display:none; background:#1b2230; border-radius:16px; padding:16px; margin-top:16px; border:1px solid #384259;">
+                <div style="display:flex; gap:24px; flex-wrap:wrap; align-items:center;">
+                    <div>
+                        <label style="font-size:14px;" data-i18n="gacha.query_pull_to_prob">抽數 → 成功率</label>
+                        <div style="display:flex; gap:8px; margin-top:4px;">
+                            <input type="number" id="inlinePullInput" min="1" placeholder="" data-i18n-placeholder="gacha.query_placeholder_pull" style="width:100px; padding:6px 10px;" />
+                            <button id="inlineCalcProbBtn" style="padding:6px 14px; font-size:14px;" data-i18n="gacha.calc">計算</button>
+                            <span id="inlineProbResult" style="color:#4fc3f7; font-weight:bold; display:flex; align-items:center;"></span>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-size:14px;" data-i18n="gacha.query_prob_to_pull">成功率 (%) → 所需抽數</label>
+                        <div style="display:flex; gap:8px; margin-top:4px;">
+                            <input type="number" id="inlineProbInput" min="0" max="100" step="0.1" placeholder="" data-i18n-placeholder="gacha.query_placeholder_prob" style="width:100px; padding:6px 10px;" />
+                            <button id="inlineCalcPullBtn" style="padding:6px 14px; font-size:14px;" data-i18n="gacha.calc">計算</button>
+                            <span id="inlinePullResult" style="color:#ffb74d; font-weight:bold; display:flex; align-items:center;"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 圖表容器 -->
             <div style="width:100%; margin: 20px auto 0 auto; background:#1a1f2e; padding:0; border-radius:12px; display:none;" id="gachaChartContainer">
                 <canvas id="gachaChart" style="width:100%;"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- 資源需求計算分頁 -->
+    <!-- ==================== 資源需求計算 ==================== -->
     <div id="resource" class="tab-pane">
         <div class="card">
             <label data-i18n="resource.upgrade_label">📋 升級路線（每行一個：星級 起始等級 結束等級 數量）</label>
@@ -64,49 +91,49 @@
             <div style="display: flex; gap: 24px; flex-wrap: wrap; margin: 20px 0;">
                 <div class="module-card">
                     <h4 style="margin:0 0 10px;" data-i18n="resource.mod4_title">⭐4 模組升級</h4>
-                    <span data-i18n="resource.lvl01">0→1級</span> <input type="number" id="m4L1" value="0" min="0" style="width:70px;"><br>
-                    <span data-i18n="resource.lvl12">1→2級</span> <input type="number" id="m4L2" value="0" min="0" style="width:70px;"><br>
-                    <span data-i18n="resource.lvl23">2→3級</span> <input type="number" id="m4L3" value="0" min="0" style="width:70px;">
+                    <span data-i18n="resource.lvl01">0→1級</span> <input type="number" id="m4L1" value="0" min="0" style="width:70px;" /><br />
+                    <span data-i18n="resource.lvl12">1→2級</span> <input type="number" id="m4L2" value="0" min="0" style="width:70px;" /><br />
+                    <span data-i18n="resource.lvl23">2→3級</span> <input type="number" id="m4L3" value="0" min="0" style="width:70px;" />
                 </div>
                 <div class="module-card">
                     <h4 style="margin:0 0 10px;" data-i18n="resource.mod5_title">⭐5 模組升級</h4>
-                    <span data-i18n="resource.lvl01">0→1級</span> <input type="number" id="m5L1" value="0" min="0" style="width:70px;"><br>
-                    <span data-i18n="resource.lvl12">1→2級</span> <input type="number" id="m5L2" value="0" min="0" style="width:70px;"><br>
-                    <span data-i18n="resource.lvl23">2→3級</span> <input type="number" id="m5L3" value="0" min="0" style="width:70px;">
+                    <span data-i18n="resource.lvl01">0→1級</span> <input type="number" id="m5L1" value="0" min="0" style="width:70px;" /><br />
+                    <span data-i18n="resource.lvl12">1→2級</span> <input type="number" id="m5L2" value="0" min="0" style="width:70px;" /><br />
+                    <span data-i18n="resource.lvl23">2→3級</span> <input type="number" id="m5L3" value="0" min="0" style="width:70px;" />
                 </div>
                 <div class="module-card">
                     <h4 style="margin:0 0 10px;" data-i18n="resource.mod6_title">⭐6 模組升級</h4>
-                    <span data-i18n="resource.lvl01">0→1級</span> <input type="number" id="m6L1" value="0" min="0" style="width:70px;"><br>
-                    <span data-i18n="resource.lvl12">1→2級</span> <input type="number" id="m6L2" value="0" min="0" style="width:70px;"><br>
-                    <span data-i18n="resource.lvl23">2→3級</span> <input type="number" id="m6L3" value="0" min="0" style="width:70px;">
+                    <span data-i18n="resource.lvl01">0→1級</span> <input type="number" id="m6L1" value="0" min="0" style="width:70px;" /><br />
+                    <span data-i18n="resource.lvl12">1→2級</span> <input type="number" id="m6L2" value="0" min="0" style="width:70px;" /><br />
+                    <span data-i18n="resource.lvl23">2→3級</span> <input type="number" id="m6L3" value="0" min="0" style="width:70px;" />
                 </div>
             </div>
 
             <label data-i18n="resource.remain_label">💰 剩餘資源</label>
             <div style="display:flex; gap:12px; flex-wrap:wrap;">
                 <span data-i18n="resource.exp_cards">經驗卡 (2000/1000/400/200):</span>
-                <input type="number" id="remXP1" value="0" style="width:70px;" placeholder="2000">
-                <input type="number" id="remXP2" value="0" style="width:70px;" placeholder="1000">
-                <input type="number" id="remXP3" value="0" style="width:70px;" placeholder="400">
-                <input type="number" id="remXP4" value="0" style="width:70px;" placeholder="200">
-                &nbsp;&nbsp; <span data-i18n="resource.lmd">龍門幣:</span> <input type="number" id="remCash" value="0" style="width:100px;">
+                <input type="number" id="remXP1" value="0" style="width:70px;" placeholder="2000" />
+                <input type="number" id="remXP2" value="0" style="width:70px;" placeholder="1000" />
+                <input type="number" id="remXP3" value="0" style="width:70px;" placeholder="400" />
+                <input type="number" id="remXP4" value="0" style="width:70px;" placeholder="200" />
+                &nbsp;&nbsp; <span data-i18n="resource.lmd">龍門幣:</span> <input type="number" id="remCash" value="0" style="width:100px;" />
             </div>
 
             <div style="margin-top:18px;">
                 <label data-i18n="resource.daily_label">📊 每日基建產出</label>
                 <div style="display:flex; gap:20px; flex-wrap:wrap;">
-                    <span data-i18n="resource.daily_exp">經驗:</span> <input type="number" id="dailyXP" value="0" style="width:100px;">
-                    <span data-i18n="resource.daily_cash">龍門幣:</span> <input type="number" id="dailyCash" value="0" style="width:100px;">
-                    <span data-i18n="resource.daily_energy">體力:</span> <input type="number" id="dailyEnergy" value="240" style="width:100px;">
+                    <span data-i18n="resource.daily_exp">經驗:</span> <input type="number" id="dailyXP" value="0" style="width:100px;" />
+                    <span data-i18n="resource.daily_cash">龍門幣:</span> <input type="number" id="dailyCash" value="0" style="width:100px;" />
+                    <span data-i18n="resource.daily_energy">體力:</span> <input type="number" id="dailyEnergy" value="240" style="width:100px;" />
                 </div>
                 <label style="margin-left:20px;">
-                    <input type="checkbox" id="includeMission"> <span data-i18n="resource.include_mission">計埋任務獎勵</span>
+                    <input type="checkbox" id="includeMission" /> <span data-i18n="resource.include_mission">計埋任務獎勵</span>
                 </label>
             </div>
 
             <div style="margin: 20px 0; display: flex; gap: 16px; align-items: center;">
                 <button id="setReserveBtn" data-i18n="resource.set_reserve">⚙️ 設定資源儲備</button>
-                <span id="reserveDisplay" style="color:#9fc5ff;" data-i18n="resource.reserve_display">目前儲備：經驗 0　龍門幣 0</span>
+                <span id="reserveDisplay" style="color:#9fc5ff;" data-i18n="resource.reserve_display_default">目前儲備：經驗 0　龍門幣 0</span>
             </div>
 
             <div style="display: flex; gap: 20px;">
@@ -117,14 +144,14 @@
         </div>
     </div>
 
-    <!-- 抽數計算分頁 -->
+    <!-- ==================== 抽數計算 ==================== -->
     <div id="pulls" class="tab-pane">
         <div class="card">
             <div style="display: grid; gap: 16px; max-width: 500px;">
-                <div><label data-i18n="pulls.label_orundum">💎 合成玉數量：</label> <input type="number" id="orundum" value="0" min="0" style="width:150px;"></div>
-                <div><label data-i18n="pulls.label_ten">🎫 十抽卷數量：</label> <input type="number" id="tenPermits" value="0" min="0" style="width:150px;"></div>
-                <div><label data-i18n="pulls.label_single">🎟️ 單抽卷數量：</label> <input type="number" id="permits" value="0" min="0" style="width:150px;"></div>
-                <div><label data-i18n="pulls.label_originite">🔶 源石數量：</label> <input type="number" id="originite" value="0" min="0" style="width:150px;"></div>
+                <div><label data-i18n="pulls.label_orundum">💎 合成玉數量：</label> <input type="number" id="orundum" value="0" min="0" style="width:150px;" /></div>
+                <div><label data-i18n="pulls.label_ten">🎫 十抽卷數量：</label> <input type="number" id="tenPermits" value="0" min="0" style="width:150px;" /></div>
+                <div><label data-i18n="pulls.label_single">🎟️ 單抽卷數量：</label> <input type="number" id="permits" value="0" min="0" style="width:150px;" /></div>
+                <div><label data-i18n="pulls.label_originite">🔶 源石數量：</label> <input type="number" id="originite" value="0" min="0" style="width:150px;" /></div>
             </div>
             <div style="margin-top: 30px;">
                 <button id="calcPullsBtn" data-i18n="pulls.calc_button">🧮 計數</button>
@@ -134,16 +161,15 @@
         </div>
     </div>
 
-    <!-- 終末地抽卡模擬分頁 -->
+    <!-- ==================== 終末地抽卡 ==================== -->
     <div id="endfield" class="tab-pane">
         <div class="card">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 12px;">
-                <div><label data-i18n="endfield.label_target">🎯 終末地目標數量：</label><br><input type="number" id="efTarget" value="1" min="1" step="1" class="small-input"></div>
-                <div><label data-i18n="endfield.label_simtimes">🔁 模擬次數：</label><br><input type="number" id="efSimTimes" value="10000" min="100" step="1000" style="width: 150px;"></div>
+                <div><label data-i18n="endfield.label_target">🎯 終末地目標數量：</label><br /><input type="number" id="efTarget" value="1" min="1" step="1" class="small-input" /></div>
+                <div><label data-i18n="endfield.label_simtimes">🔁 模擬次數：</label><br /><input type="number" id="efSimTimes" value="10000" min="100" step="1000" style="width:150px;" /></div>
             </div>
             <div style="margin-top: 20px; display: flex; gap: 16px; flex-wrap: wrap;">
                 <button id="startEfSimBtn" data-i18n="endfield.sim_button">▶ 開始模擬</button>
-                <button id="efQueryBtn" disabled data-i18n="endfield.query_button">🔍 查詢概率 / 所需抽數</button>
                 <button id="efCopyMatlabBtn" disabled data-i18n="endfield.copy_matlab">📋 複製 MATLAB 代碼</button>
                 <button id="resetEfBtn" style="background:#3f4d5e;" data-i18n="endfield.reset">⟲ 重置</button>
             </div>
@@ -153,8 +179,8 @@
     </div>
 </div>
 
-<!-- 資源儲備彈窗 (隱藏) -->
-<div id="reserveModal" style="display:none; position:fixed; top:0;left:0;width:100%;height:100%; background:rgba(0,0,0,0.7); align-items:center; justify-content:center;">
+<!-- 資源儲備彈窗 -->
+<div id="reserveModal" style="display:none; position:fixed; top:0;left:0;width:100%;height:100%; background:rgba(0,0,0,0.7); align-items:center; justify-content:center; z-index:999;">
     <div style="background:#252b3d; padding:24px; border-radius:28px; width:700px; max-width:90%;">
         <h3 data-i18n="modal.reserve_title">🔒 設定資源儲備</h3>
         <label data-i18n="modal.upgrade_label">升級路線（同上）</label>
@@ -162,21 +188,21 @@
         <div style="display: flex; gap: 24px; flex-wrap: wrap; margin: 20px 0;">
             <div class="module-card">
                 <h4 style="margin:0 0 10px;" data-i18n="resource.mod4_title">⭐4 模組升級</h4>
-                <span data-i18n="resource.lvl01">0→1級</span> <input type="number" id="mm4L1" value="0" min="0" style="width:70px;"><br>
-                <span data-i18n="resource.lvl12">1→2級</span> <input type="number" id="mm4L2" value="0" min="0" style="width:70px;"><br>
-                <span data-i18n="resource.lvl23">2→3級</span> <input type="number" id="mm4L3" value="0" min="0" style="width:70px;">
+                <span data-i18n="resource.lvl01">0→1級</span> <input type="number" id="mm4L1" value="0" min="0" style="width:70px;" /><br />
+                <span data-i18n="resource.lvl12">1→2級</span> <input type="number" id="mm4L2" value="0" min="0" style="width:70px;" /><br />
+                <span data-i18n="resource.lvl23">2→3級</span> <input type="number" id="mm4L3" value="0" min="0" style="width:70px;" />
             </div>
             <div class="module-card">
                 <h4 style="margin:0 0 10px;" data-i18n="resource.mod5_title">⭐5 模組升級</h4>
-                <span data-i18n="resource.lvl01">0→1級</span> <input type="number" id="mm5L1" value="0" min="0" style="width:70px;"><br>
-                <span data-i18n="resource.lvl12">1→2級</span> <input type="number" id="mm5L2" value="0" min="0" style="width:70px;"><br>
-                <span data-i18n="resource.lvl23">2→3級</span> <input type="number" id="mm5L3" value="0" min="0" style="width:70px;">
+                <span data-i18n="resource.lvl01">0→1級</span> <input type="number" id="mm5L1" value="0" min="0" style="width:70px;" /><br />
+                <span data-i18n="resource.lvl12">1→2級</span> <input type="number" id="mm5L2" value="0" min="0" style="width:70px;" /><br />
+                <span data-i18n="resource.lvl23">2→3級</span> <input type="number" id="mm5L3" value="0" min="0" style="width:70px;" />
             </div>
             <div class="module-card">
                 <h4 style="margin:0 0 10px;" data-i18n="resource.mod6_title">⭐6 模組升級</h4>
-                <span data-i18n="resource.lvl01">0→1級</span> <input type="number" id="mm6L1" value="0" min="0" style="width:70px;"><br>
-                <span data-i18n="resource.lvl12">1→2級</span> <input type="number" id="mm6L2" value="0" min="0" style="width:70px;"><br>
-                <span data-i18n="resource.lvl23">2→3級</span> <input type="number" id="mm6L3" value="0" min="0" style="width:70px;">
+                <span data-i18n="resource.lvl01">0→1級</span> <input type="number" id="mm6L1" value="0" min="0" style="width:70px;" /><br />
+                <span data-i18n="resource.lvl12">1→2級</span> <input type="number" id="mm6L2" value="0" min="0" style="width:70px;" /><br />
+                <span data-i18n="resource.lvl23">2→3級</span> <input type="number" id="mm6L3" value="0" min="0" style="width:70px;" />
             </div>
         </div>
         <button id="computeReserveBtn" data-i18n="modal.compute_reserve">計算儲備需求</button>
