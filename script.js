@@ -800,46 +800,69 @@ hold off;
         // ========== 畫圖功能 (新增) ==========
     let gachaChartInstance = null; // 用嚟記住舊嘅圖，等下次唔會重疊
 
-    function drawGachaChart(sortedList, oList) {
+        function drawGachaChart(sortedList, oList) {
         const container = document.getElementById('gachaChartContainer');
         const canvas = document.getElementById('gachaChart');
         if (!canvas || !container) return;
+        if (!sortedList || sortedList.length === 0) return;
 
-        // 1. 顯示個容器
+        // 顯示容器
         container.style.display = 'block';
 
-        // 2. 如果之前畫過，要銷毀 (Destroy) 舊圖，避免 memory leak
+        // 銷毀舊圖
         if (gachaChartInstance) {
             gachaChartInstance.destroy();
             gachaChartInstance = null;
         }
 
         const ctx = canvas.getContext('2d');
+        const total = sortedList.length;
 
-        // 3. 為咗畫圖順暢，如果數據點太多（>600個），就抽樣 (Downsample)
+        // ----- 第 1 步：完整計算 PDF 同 CDF (全部點，一個都唔跳) -----
+        const fullPDF = [];
+        const fullCDF = [];
+        let cum = 0;
+
+        for (let i = 0; i < oList.length; i++) {
+            const pdf = oList[i] / total;
+            fullPDF.push(pdf);
+            cum += pdf;
+            fullCDF.push(cum);
+        }
+
+        // ----- 第 2 步：抽樣 (Downsample) 方便畫圖，但拎嘅數值係完整計好嘅 -----
         let step = 1;
-        if (oList.length > 600) step = Math.floor(oList.length / 600);
+        const MAX_POINTS = 600;
+        if (oList.length > MAX_POINTS) {
+            step = Math.ceil(oList.length / MAX_POINTS);
+        }
 
         const labels = [];
         const pdfData = [];
         const cdfData = [];
-        let cum = 0;
 
         for (let i = 0; i < oList.length; i += step) {
-            labels.push(i + 1);                     // X軸：抽數
-            pdfData.push(oList[i] / sortedList.length); // PDF：每個抽數嘅機率
-            cum += oList[i] / sortedList.length;    // CDF：累積機率
-            cdfData.push(cum);
+            labels.push(i + 1);
+            pdfData.push(fullPDF[i]);
+            cdfData.push(fullCDF[i]);
         }
 
-        // 4. 正式用 Chart.js 畫圖
+        // 確保最後一點一定包埋 (等 CDF 去到 1.0)
+        const lastIdx = oList.length - 1;
+        if (labels[labels.length - 1] !== lastIdx + 1) {
+            labels.push(lastIdx + 1);
+            pdfData.push(fullPDF[lastIdx]);
+            cdfData.push(fullCDF[lastIdx]);
+        }
+
+        // ----- 第 3 步：畫圖 -----
         gachaChartInstance = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [
                     {
-                        label: 'PMF (概率質量函數)',
+                        label: 'PDF (概率密度)',
                         data: pdfData,
                         borderColor: '#4fc3f7',
                         backgroundColor: 'rgba(79, 195, 247, 0.1)',
@@ -862,8 +885,10 @@ hold off;
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2,
                 plugins: {
-                    title: { display: true, text: '📊 抽卡分佈 (PMF + CDF)', color: '#eee' },
+                    title: { display: true, text: '📊 抽卡分佈 (PDF + CDF)', color: '#eee' },
                     legend: { labels: { color: '#ccc' } }
                 },
                 scales: {
@@ -879,6 +904,7 @@ hold off;
                     y1: { 
                         position: 'right', 
                         beginAtZero: true, 
+                        // 唔好 set max，等佢自然去到 1.0
                         title: { display: true, text: 'CDF', color: '#aaa' }, 
                         grid: { drawOnChartArea: false }, 
                         ticks: { color: '#aaa' } 
