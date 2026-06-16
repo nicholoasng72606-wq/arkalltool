@@ -131,8 +131,8 @@
   "matlab": {
     "auto_generated": "Gacha simulation result (auto-generated)",
     "instruction": "Run in MATLAB",
-    "plot_pdf": "Plot PDF (probability density function)",
-    "pdf_title": "Probability Density Function (PDF)",
+    "plot_pdf": "Plot PMF (Probability Mass Function)",
+    "pmf_title": "PMF (Probability Mass Function)",
     "pulls": "Pulls needed",
     "density": "Probability density",
     "plot_cdf": "Plot CDF with 90%, 99%, 99.99% confidence intervals",
