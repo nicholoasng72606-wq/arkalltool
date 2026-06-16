@@ -147,5 +147,7 @@
     "arknights_title": "Arknights Gacha Simulation",
     "endfield_title": "Endfield Gacha Simulation"
   },
-  "copy_fail": "Copy failed, please manually select the text."
+  "copy_fail": "Copy failed, please manually select the text.",
+  "sim_time_prefix": "⏱️ Simulation time: ",
+  "sim_time_suffix": "s"
 }
