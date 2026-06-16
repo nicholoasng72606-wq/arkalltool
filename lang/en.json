@@ -1,5 +1,5 @@
 {
-  "lang_name": "Language",
+  "lang_name": "English",
   "title": "⚔️ Rhodes Island Logistics Terminal",
   "tabs": {
     "gacha": "🎲 Gacha Simulator",
@@ -8,13 +8,12 @@
     "endfield": "🌌 Endfield Gacha"
   },
   "gacha": {
-    "label_reg": "Special banners:",
+    "label_reg": "Standard banners:",
     "label_ol": "Single target limited:",
     "label_tl": "Dual target limited:",
     "label_coop": "Collaboration banners:",
     "label_simtimes": "Simulation runs:",
     "sim_button": "▶ Start Simulation",
-    "query_button": "🔍 Query Probability/Pulls",
     "copy_matlab": "📋 Copy MATLAB Code",
     "reset": "⟲ Reset",
     "result_initial": "Simulation not started. Set parameters and click \"Start Simulation\".",
@@ -30,7 +29,6 @@
     "result_ci9999": "99.99% CI: {{mean}} ± {{ci}}",
     "alert_times": "Simulation runs must be greater than 0.",
     "alert_no_sim": "Please run a simulation first.",
-    "query_title": "Query Tool",
     "query_pull_to_prob": "Pulls → Success rate",
     "query_prob_to_pull": "Success rate (%) → Required pulls",
     "query_placeholder_pull": "Enter pulls",
@@ -41,7 +39,18 @@
     "query_prob_result": "Success rate: {{prob}}%",
     "query_pull_result": "At least: {{pulls}} pulls",
     "query_prob_range": "Percentage must be between 0 and 100.",
-    "copy_success": "MATLAB code copied to clipboard! Paste into MATLAB."
+    "copy_success": "MATLAB code copied to clipboard! Paste into MATLAB.",
+    "sim_time_prefix": "⏱️ Simulation time: ",
+    "sim_time_suffix": "s",
+    "chart_title": "📊 Pull Distribution (PDF + CDF)",
+    "chart_pdf_label": "PDF (Probability Density)",
+    "chart_cdf_label": "CDF (Cumulative Probability)",
+    "chart_x_label": "Pulls",
+    "chart_y_label": "PDF",
+    "chart_y1_label": "CDF",
+    "highlight_label": "Your Query Point",
+    "highlight_label_pull_to_prob": "Query (Pulls→Prob)",
+    "highlight_label_prob_to_pull": "Query (Prob→Pulls)"
   },
   "resource": {
     "upgrade_label": "📋 Upgrade plan (one per line: stars start_lv end_lv quantity)",
@@ -89,7 +98,6 @@
     "label_target": "🎯 Endfield banners:",
     "label_simtimes": "🔁 Simulation runs:",
     "sim_button": "▶ Start Simulation",
-    "query_button": "🔍 Query Probability/Pulls",
     "copy_matlab": "📋 Copy MATLAB Code",
     "reset": "⟲ Reset",
     "result_initial": "Simulation not started. Set parameters and click \"Start Simulation\".",
@@ -107,7 +115,6 @@
     "result_deciles": "Deciles: {{deciles}}",
     "result_ci99": "99% CI: {{mean}} ± {{ci}}",
     "result_ci9999": "99.99% CI: {{mean}} ± {{ci}}",
-    "query_title": "Endfield Query Tool",
     "query_pull_to_prob": "Pulls → Success rate",
     "query_prob_to_pull": "Success rate (%) → Required pulls",
     "query_placeholder_pull": "Enter pulls",
@@ -147,7 +154,5 @@
     "arknights_title": "Arknights Gacha Simulation",
     "endfield_title": "Endfield Gacha Simulation"
   },
-  "copy_fail": "Copy failed, please manually select the text.",
-  "sim_time_prefix": "⏱️ Simulation time: ",
-  "sim_time_suffix": "s"
+  "copy_fail": "Copy failed, please manually select the text."
 }
