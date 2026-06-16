@@ -147,5 +147,7 @@
     "arknights_title": "明日方舟抽卡模擬",
     "endfield_title": "終末地抽卡模擬"
   },
-  "copy_fail": "複製失敗，請手動選擇文字。"
+  "copy_fail": "複製失敗，請手動選擇文字。",
+  "sim_time_prefix": "⏱️ 模擬時間：",
+  "sim_time_suffix": "秒"
 }
