@@ -800,7 +800,7 @@ hold off;
         // ========== 畫圖功能 (新增) ==========
     let gachaChartInstance = null; // 用嚟記住舊嘅圖，等下次唔會重疊
 
-        function drawGachaChart(sortedList, oList) {
+    function drawGachaChart(sortedList, oList) {
         const container = document.getElementById('gachaChartContainer');
         const canvas = document.getElementById('gachaChart');
         if (!canvas || !container) return;
