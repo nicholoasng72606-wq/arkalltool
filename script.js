@@ -229,10 +229,10 @@
 data = [${dataStr}];
 
 % ${t('matlab.plot_pdf')}
-figure('Name','${title} PDF');
+figure('Name','${title} PMF');
 edges = min(data):1:max(data);
 histogram(data, edges, 'Normalization', 'pdf');
-title('${title} - ${t('matlab.pdf_title')}');
+title('${title} - ${t('matlab.pmf_title')}');
 xlabel('${t('matlab.pulls')}');
 ylabel('${t('matlab.density')}');
 grid on;
@@ -476,6 +476,7 @@ hold off;
                 out += t('gacha.result_ci9999', {mean: mean.toFixed(2), ci: ci9999.toFixed(2)}) + '\n';
                 out += '==================================================';
                 resultDiv.textContent = out;
+                drawGachaChart(sortedList, oList);
                 startBtn.disabled = false;
                 queryBtn.disabled = false;
                 copyMatlabBtn.disabled = false;
@@ -796,6 +797,96 @@ hold off;
         const code = generateMatlabCode(efSortedList, t('matlab.endfield_title'));
         copyToClipboard(code, t('endfield.copy_success'));
     });
+        // ========== 畫圖功能 (新增) ==========
+    let gachaChartInstance = null; // 用嚟記住舊嘅圖，等下次唔會重疊
+
+    function drawGachaChart(sortedList, oList) {
+        const container = document.getElementById('gachaChartContainer');
+        const canvas = document.getElementById('gachaChart');
+        if (!canvas || !container) return;
+
+        // 1. 顯示個容器
+        container.style.display = 'block';
+
+        // 2. 如果之前畫過，要銷毀 (Destroy) 舊圖，避免 memory leak
+        if (gachaChartInstance) {
+            gachaChartInstance.destroy();
+            gachaChartInstance = null;
+        }
+
+        const ctx = canvas.getContext('2d');
+
+        // 3. 為咗畫圖順暢，如果數據點太多（>600個），就抽樣 (Downsample)
+        let step = 1;
+        if (oList.length > 600) step = Math.floor(oList.length / 600);
+
+        const labels = [];
+        const pdfData = [];
+        const cdfData = [];
+        let cum = 0;
+
+        for (let i = 0; i < oList.length; i += step) {
+            labels.push(i + 1);                     // X軸：抽數
+            pdfData.push(oList[i] / sortedList.length); // PDF：每個抽數嘅機率
+            cum += oList[i] / sortedList.length;    // CDF：累積機率
+            cdfData.push(cum);
+        }
+
+        // 4. 正式用 Chart.js 畫圖
+        gachaChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'PMF (概率質量函數)',
+                        data: pdfData,
+                        borderColor: '#4fc3f7',
+                        backgroundColor: 'rgba(79, 195, 247, 0.1)',
+                        fill: true,
+                        pointRadius: 0,
+                        tension: 0.2,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'CDF (累積概率)',
+                        data: cdfData,
+                        borderColor: '#ffb74d',
+                        backgroundColor: 'rgba(255, 183, 77, 0.05)',
+                        fill: false,
+                        pointRadius: 0,
+                        tension: 0.2,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: { display: true, text: '📊 抽卡分佈 (PMF + CDF)', color: '#eee' },
+                    legend: { labels: { color: '#ccc' } }
+                },
+                scales: {
+                    x: { 
+                        title: { display: true, text: '抽數', color: '#aaa' }, 
+                        ticks: { color: '#aaa', maxTicksLimit: 20 } 
+                    },
+                    y: { 
+                        beginAtZero: true, 
+                        title: { display: true, text: 'PDF', color: '#aaa' }, 
+                        ticks: { color: '#aaa' } 
+                    },
+                    y1: { 
+                        position: 'right', 
+                        beginAtZero: true, 
+                        title: { display: true, text: 'CDF', color: '#aaa' }, 
+                        grid: { drawOnChartArea: false }, 
+                        ticks: { color: '#aaa' } 
+                    }
+                }
+            }
+        });
+    }
 
     // 鍵盤快捷鍵
     window.addEventListener('keydown', (e)=>{
