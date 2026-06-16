@@ -5,15 +5,13 @@
     const langConfig = {
         'zh-HK': { file: 'lang/zh-HK.json', name: '廣東話口語' },
         'en':    { file: 'lang/en.json', name: 'English' },
-        'zh-TW':    { file: 'lang/zh-TW.json', name: '繁體中文' }
-        // 日後加語言只需加一行
+        'zh-TW': { file: 'lang/zh-TW.json', name: '繁體中文' }
     };
     const DEFAULT_LANG = 'zh-HK';
     let currentLang = DEFAULT_LANG;
-    let translations = {};  // 當前語言字典
-    let langCache = {};     // 已載入嘅語言 cache
+    let translations = {};
+    let langCache = {};
 
-    // 偵測瀏覽器語言
     function detectLanguage() {
         const browser = navigator.language || '';
         if (langConfig[browser]) return browser;
@@ -22,7 +20,6 @@
         return DEFAULT_LANG;
     }
 
-    // 載入語言檔
     async function loadLanguage(lang) {
         if (langCache[lang]) {
             translations = langCache[lang];
@@ -46,7 +43,6 @@
         applyLanguage();
     }
 
-    // 將翻譯套用到頁面
     function applyLanguage() {
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
@@ -101,7 +97,7 @@
         });
     }
 
-    // ==================== 原有遊戲邏輯 ====================
+    // ==================== 遊戲邏輯 ====================
     function six(sixProbi) {
         return Math.floor(Math.random() * 1000) + 1 <= sixProbi * 1000;
     }
@@ -222,9 +218,9 @@
         return total;
     }
 
-   function generateMatlabCode(sortedList, title) {
-    const dataStr = sortedList.join(' ');
-    return `% ${title} - ${t('matlab.auto_generated')}
+    function generateMatlabCode(sortedList, title) {
+        const dataStr = sortedList.join(' ');
+        return `% ${title} - ${t('matlab.auto_generated')}
 % ${t('matlab.instruction')}
 data = [${dataStr}];
 
@@ -311,7 +307,7 @@ legend('CDF', ...
 grid on;
 hold off;
 `;
-}
+    }
 
     function copyToClipboard(text, successMsg) {
         if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -397,9 +393,8 @@ hold off;
         });
     });
 
-    // Gacha UI
+    // ==================== Gacha UI ====================
     const startBtn = document.getElementById('startSimBtn');
-    const queryBtn = document.getElementById('queryBtn');
     const copyMatlabBtn = document.getElementById('copyMatlabBtn');
     const progress = document.getElementById('simProgress');
     const resultDiv = document.getElementById('gachaResult');
@@ -414,9 +409,16 @@ hold off;
         resultDiv.textContent = t('gacha.result_initial');
         progress.value = 0;
         sortedList = []; oList = [];
-        queryBtn.disabled = true;
         copyMatlabBtn.disabled = true;
         document.getElementById('simTime').style.display = 'none';
+        document.getElementById('gachaQueryPanel').style.display = 'none';
+        document.getElementById('gachaChartContainer').style.display = 'none';
+        document.getElementById('inlineProbResult').textContent = '';
+        document.getElementById('inlinePullResult').textContent = '';
+        if (gachaChartInstance) {
+            gachaChartInstance.destroy();
+            gachaChartInstance = null;
+        }
     }
     document.getElementById('resetGachaBtn').addEventListener('click', resetGacha);
 
@@ -430,11 +432,12 @@ hold off;
         if (times <= 0) { alert(t('gacha.alert_times')); return; }
 
         startBtn.disabled = true;
-        queryBtn.disabled = true;
         copyMatlabBtn.disabled = true;
         resultDiv.textContent = t('gacha.calculating');
         progress.value = 0;
         sortedList = []; oList = [];
+        document.getElementById('simTime').style.display = 'none';
+        document.getElementById('gachaQueryPanel').style.display = 'none';
 
         const chunkSize = 500;
         let results = [];
@@ -479,57 +482,17 @@ hold off;
                 out += '==================================================';
                 resultDiv.textContent = out;
                 drawGachaChart(sortedList, oList);
+                
                 const endTime = performance.now();
                 const elapsedSeconds = (endTime - startTime) / 1000;
                 document.getElementById('timeDisplay').textContent = elapsedSeconds.toFixed(2);
                 document.getElementById('simTime').style.display = 'block';
+                
                 startBtn.disabled = false;
-                queryBtn.disabled = false;
                 copyMatlabBtn.disabled = false;
             }
         }
         runSimulationChunk(0);
-    });
-
-    queryBtn.addEventListener('click', () => {
-        if (!sortedList.length) { alert(t('gacha.alert_no_sim')); return; }
-        const queryWin = document.createElement('div');
-        Object.assign(queryWin.style, {
-            position:'fixed', top:'30%', left:'35%', background:'#1e2533',
-            padding:'24px', borderRadius:'20px', width:'400px', zIndex:'1000',
-            boxShadow:'0 0 30px black'
-        });
-        queryWin.innerHTML = `
-            <h3>🔎 ${t('gacha.query_title')}</h3>
-            <div style="margin:15px 0;"><label>${t('gacha.query_pull_to_prob')}</label><br>
-                <input id="qPull" type="number" placeholder="${t('gacha.query_placeholder_pull')}" style="width:100%">
-                <button id="calcProbBtn">${t('gacha.calc')}</button> <span id="probResult"></span>
-            </div>
-            <div><label>${t('gacha.query_prob_to_pull')}</label><br>
-                <input id="qProb" type="number" step="0.1" placeholder="${t('gacha.query_placeholder_prob')}" style="width:100%">
-                <button id="calcPullBtn">${t('gacha.calc')}</button> <span id="pullResult"></span>
-            </div>
-            <button id="closeQuery" style="margin-top:20px;">${t('gacha.close')}</button>
-        `;
-        document.body.appendChild(queryWin);
-        document.getElementById('calcProbBtn').addEventListener('click', ()=>{
-            const q = parseInt(document.getElementById('qPull').value);
-            if (isNaN(q) || q<=0 || q>oList.length) document.getElementById('probResult').textContent = t('gacha.query_out_of_range');
-            else {
-                const cum = oList.slice(0,q).reduce((a,b)=>a+b,0);
-                const prob = cum / sortedList.length * 100;
-                document.getElementById('probResult').textContent = t('gacha.query_prob_result', {prob: prob.toFixed(2)});
-            }
-        });
-        document.getElementById('calcPullBtn').addEventListener('click', ()=>{
-            const p = parseFloat(document.getElementById('qProb').value);
-            if (isNaN(p) || p<=0 || p>100) document.getElementById('pullResult').textContent = t('gacha.query_prob_range');
-            else {
-                const idx = Math.floor(p/100 * sortedList.length) - 1;
-                document.getElementById('pullResult').textContent = t('gacha.query_pull_result', {pulls: sortedList[Math.max(0,idx)]});
-            }
-        });
-        document.getElementById('closeQuery').addEventListener('click', ()=> queryWin.remove());
     });
 
     copyMatlabBtn.addEventListener('click', () => {
@@ -541,7 +504,215 @@ hold off;
         copyToClipboard(code, t('gacha.copy_success'));
     });
 
-    // Resource calculator
+    // ==================== 畫圖功能====================
+    let gachaChartInstance = null;
+
+    function drawGachaChart(sortedList, oList) {
+        const container = document.getElementById('gachaChartContainer');
+        const canvas = document.getElementById('gachaChart');
+        if (!canvas || !container) return;
+        if (!sortedList || sortedList.length === 0) return;
+
+        container.style.display = 'block';
+        document.getElementById('gachaQueryPanel').style.display = 'block';
+
+        if (gachaChartInstance) {
+            gachaChartInstance.destroy();
+            gachaChartInstance = null;
+        }
+
+        const ctx = canvas.getContext('2d');
+        const total = sortedList.length;
+
+        const labels = [];
+        const pdfData = [];
+        const cdfData = [];
+        let cum = 0;
+
+        for (let i = 0; i < oList.length; i++) {
+            const pdf = oList[i] / total;
+            labels.push(i + 1);
+            pdfData.push(pdf);
+            cum += pdf;
+            cdfData.push(cum);
+        }
+
+        gachaChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: t('gacha.chart_pdf_label'),
+                        data: pdfData,
+                        borderColor: '#4fc3f7',
+                        backgroundColor: 'rgba(79, 195, 247, 0.1)',
+                        fill: true,
+                        pointRadius: 0,
+                        tension: 0.2,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: t('gacha.chart_cdf_label'),
+                        data: cdfData,
+                        borderColor: '#ffb74d',
+                        backgroundColor: 'rgba(255, 183, 77, 0.05)',
+                        fill: false,
+                        pointRadius: 0,
+                        tension: 0.2,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: t('gacha.chart_title'),
+                        color: '#eee',
+                        font: { size: 18 }
+                    },
+                    legend: {
+                        labels: {
+                            color: '#ccc',
+                            font: { size: 14 }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: t('gacha.chart_x_label'),
+                            color: '#aaa',
+                            font: { size: 14 }
+                        },
+                        ticks: {
+                            color: '#aaa',
+                            maxTicksLimit: 30,
+                            font: { size: 12 }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: t('gacha.chart_y_label'),
+                            color: '#aaa',
+                            font: { size: 14 }
+                        },
+                        ticks: {
+                            color: '#aaa',
+                            font: { size: 12 }
+                        }
+                    },
+                    y1: {
+                        position: 'right',
+                        beginAtZero: true,
+                        max: 1,
+                        title: {
+                            display: true,
+                            text: t('gacha.chart_y1_label'),
+                            color: '#aaa',
+                            font: { size: 14 }
+                        },
+                        grid: { drawOnChartArea: false },
+                        ticks: {
+                            color: '#aaa',
+                            font: { size: 12 }
+                        }
+                    }
+                }
+            }
+        });
+
+        window._cdfData = cdfData;
+        window._pdfData = pdfData;
+        window._oList = oList;
+        window._sortedList = sortedList;
+    }
+
+    // ========== 內嵌查詢功能（已 i18n）==========
+    function highlightCDFPoint(pullCount, type) {
+        if (!gachaChartInstance) return;
+        const cdfData = window._cdfData;
+        if (!cdfData || pullCount > cdfData.length) return;
+
+        const prob = cdfData[pullCount - 1] * 100;
+
+        let labelKey, color;
+        if (type === 'pullToProb') {
+            labelKey = 'gacha.highlight_label_pull_to_prob';
+            color = '#ff6b6b';   // 紅色
+        } else if (type === 'probToPull') {
+            labelKey = 'gacha.highlight_label_prob_to_pull';
+            color = '#81c784';   // 綠色
+        } else {
+            return;
+        }
+        const label = '🔍 ' + t(labelKey);
+
+        // 搵吓有冇相同 label 嘅 dataset
+        let dataset = gachaChartInstance.data.datasets.find(d => d.label === label);
+        if (dataset) {
+            // 有就 update 數據
+            dataset.data = [{ x: pullCount, y: prob / 100 }];
+        } else {
+            // 冇就新增
+            gachaChartInstance.data.datasets.push({
+                label: label,
+                data: [{ x: pullCount, y: prob / 100 }],
+                backgroundColor: color,
+                borderColor: color,
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                pointStyle: 'circle',
+                showLine: false,
+                yAxisID: 'y1'
+            });
+        }
+        gachaChartInstance.update();
+    }
+
+    document.getElementById('inlineCalcProbBtn').addEventListener('click', () => {
+        const pullInput = document.getElementById('inlinePullInput');
+        const q = parseInt(pullInput.value);
+        const cdfData = window._cdfData;
+        const sortedList = window._sortedList;
+
+        if (!cdfData || !sortedList || isNaN(q) || q <= 0 || q > cdfData.length) {
+            document.getElementById('inlineProbResult').textContent = '❌ ' + t('gacha.query_out_of_range');
+            return;
+        }
+        const prob = cdfData[q - 1] * 100;
+        document.getElementById('inlineProbResult').textContent = t('gacha.query_prob_result', {prob: prob.toFixed(2)});
+        highlightCDFPoint(q, 'pullToProb');
+    });
+
+    document.getElementById('inlineCalcPullBtn').addEventListener('click', () => {
+        const probInput = document.getElementById('inlineProbInput');
+        const p = parseFloat(probInput.value);
+        const cdfData = window._cdfData;
+        const sortedList = window._sortedList;
+
+        if (!cdfData || !sortedList || isNaN(p) || p < 0 || p > 100) {
+            document.getElementById('inlinePullResult').textContent = '❌ ' + t('gacha.query_prob_range');
+            return;
+        }
+
+        const targetProb = p / 100;
+        let foundIdx = cdfData.findIndex(val => val >= targetProb);
+        if (foundIdx === -1) foundIdx = cdfData.length - 1;
+
+        const pulls = foundIdx + 1;
+        document.getElementById('inlinePullResult').textContent = t('gacha.query_pull_result', {pulls: pulls});
+        highlightCDFPoint(pulls, 'probToPull');
+    });
+
+    // ==================== Resource calculator ====================
     let reservedExp = 0, reservedCash = 0;
     const reserveDisplay = document.getElementById('reserveDisplay');
     const modal = document.getElementById('reserveModal');
@@ -652,7 +823,7 @@ hold off;
         reserveDisplay.textContent = t('resource.reserve_display_default');
     });
 
-    // Pulls calculator
+    // ==================== Pulls calculator ====================
     document.getElementById('calcPullsBtn').addEventListener('click', ()=>{
         const orundum = +document.getElementById('orundum').value;
         const ten = +document.getElementById('tenPermits').value;
@@ -671,9 +842,8 @@ hold off;
         document.getElementById('pullsResult').textContent = '';
     });
 
-    // Endfield gacha UI
+    // ==================== Endfield UI ====================
     const efStartBtn = document.getElementById('startEfSimBtn');
-    const efQueryBtn = document.getElementById('efQueryBtn');
     const efCopyMatlabBtn = document.getElementById('efCopyMatlabBtn');
     const efProgress = document.getElementById('efProgress');
     const efResultDiv = document.getElementById('efResult');
@@ -686,7 +856,6 @@ hold off;
         efProgress.value = 0;
         efSortedList = [];
         efOList = [];
-        efQueryBtn.disabled = true;
         efCopyMatlabBtn.disabled = true;
     }
     document.getElementById('resetEfBtn').addEventListener('click', resetEndfield);
@@ -698,7 +867,6 @@ hold off;
         if (target <= 0) { alert(t('endfield.alert_target')); return; }
 
         efStartBtn.disabled = true;
-        efQueryBtn.disabled = true;
         efCopyMatlabBtn.disabled = true;
         efResultDiv.textContent = t('endfield.calculating');
         efProgress.value = 0;
@@ -747,52 +915,10 @@ hold off;
                 out += '==================================================';
                 efResultDiv.textContent = out;
                 efStartBtn.disabled = false;
-                efQueryBtn.disabled = false;
                 efCopyMatlabBtn.disabled = false;
             }
         }
         runEfSimulation(0);
-    });
-
-    efQueryBtn.addEventListener('click', () => {
-        if (!efSortedList.length) { alert(t('endfield.alert_no_sim')); return; }
-        const queryWin = document.createElement('div');
-        Object.assign(queryWin.style, {
-            position:'fixed', top:'30%', left:'35%', background:'#1e2533',
-            padding:'24px', borderRadius:'20px', width:'400px', zIndex:'1000',
-            boxShadow:'0 0 30px black'
-        });
-        queryWin.innerHTML = `
-            <h3>🔎 ${t('endfield.query_title')}</h3>
-            <div style="margin:15px 0;"><label>${t('endfield.query_pull_to_prob')}</label><br>
-                <input id="efQPull" type="number" placeholder="${t('endfield.query_placeholder_pull')}" style="width:100%">
-                <button id="efCalcProbBtn">${t('endfield.calc')}</button> <span id="efProbResult"></span>
-            </div>
-            <div><label>${t('endfield.query_prob_to_pull')}</label><br>
-                <input id="efQProb" type="number" step="0.1" placeholder="${t('endfield.query_placeholder_prob')}" style="width:100%">
-                <button id="efCalcPullBtn">${t('endfield.calc')}</button> <span id="efPullResult"></span>
-            </div>
-            <button id="efCloseQuery" style="margin-top:20px;">${t('endfield.close')}</button>
-        `;
-        document.body.appendChild(queryWin);
-        document.getElementById('efCalcProbBtn').addEventListener('click', ()=>{
-            const q = parseInt(document.getElementById('efQPull').value);
-            if (isNaN(q) || q<=0 || q>efOList.length) document.getElementById('efProbResult').textContent = t('endfield.query_out_of_range');
-            else {
-                const cum = efOList.slice(0,q).reduce((a,b)=>a+b,0);
-                const prob = cum / efSortedList.length * 100;
-                document.getElementById('efProbResult').textContent = t('endfield.query_prob_result', {prob: prob.toFixed(2)});
-            }
-        });
-        document.getElementById('efCalcPullBtn').addEventListener('click', ()=>{
-            const p = parseFloat(document.getElementById('efQProb').value);
-            if (isNaN(p) || p<=0 || p>100) document.getElementById('efPullResult').textContent = t('endfield.query_prob_range');
-            else {
-                const idx = Math.floor(p/100 * efSortedList.length) - 1;
-                document.getElementById('efPullResult').textContent = t('endfield.query_pull_result', {pulls: efSortedList[Math.max(0,idx)]});
-            }
-        });
-        document.getElementById('efCloseQuery').addEventListener('click', ()=> queryWin.remove());
     });
 
     efCopyMatlabBtn.addEventListener('click', () => {
@@ -803,124 +929,8 @@ hold off;
         const code = generateMatlabCode(efSortedList, t('matlab.endfield_title'));
         copyToClipboard(code, t('endfield.copy_success'));
     });
-        // ========== 畫圖功能 (新增) ==========
-    let gachaChartInstance = null; // 用嚟記住舊嘅圖，等下次唔會重疊
 
-        function drawGachaChart(sortedList, oList) {
-        const container = document.getElementById('gachaChartContainer');
-        const canvas = document.getElementById('gachaChart');
-        if (!canvas || !container) return;
-        if (!sortedList || sortedList.length === 0) return;
-
-        // 顯示容器
-        container.style.display = 'block';
-
-        // 銷毀舊圖
-        if (gachaChartInstance) {
-            gachaChartInstance.destroy();
-            gachaChartInstance = null;
-        }
-
-        const ctx = canvas.getContext('2d');
-        const total = sortedList.length;
-
-        // ----- 第 1 步：完整計算 PDF 同 CDF (全部點，一個都唔跳) -----
-        const fullPDF = [];
-        const fullCDF = [];
-        let cum = 0;
-
-        for (let i = 0; i < oList.length; i++) {
-            const pdf = oList[i] / total;
-            fullPDF.push(pdf);
-            cum += pdf;
-            fullCDF.push(cum);
-        }
-
-        // ----- 第 2 步：抽樣 (Downsample) 方便畫圖，但拎嘅數值係完整計好嘅 -----
-        let step = 1;
-        const MAX_POINTS = 600;
-        if (oList.length > MAX_POINTS) {
-            step = Math.ceil(oList.length / MAX_POINTS);
-        }
-
-        const labels = [];
-        const pdfData = [];
-        const cdfData = [];
-
-        for (let i = 0; i < oList.length; i += step) {
-            labels.push(i + 1);
-            pdfData.push(fullPDF[i]);
-            cdfData.push(fullCDF[i]);
-        }
-
-        // 確保最後一點一定包埋 (等 CDF 去到 1.0)
-        const lastIdx = oList.length - 1;
-        if (labels[labels.length - 1] !== lastIdx + 1) {
-            labels.push(lastIdx + 1);
-            pdfData.push(fullPDF[lastIdx]);
-            cdfData.push(fullCDF[lastIdx]);
-        }
-
-        // ----- 第 3 步：畫圖 -----
-        gachaChartInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: 'PDF (概率密度)',
-                        data: pdfData,
-                        borderColor: '#4fc3f7',
-                        backgroundColor: 'rgba(79, 195, 247, 0.1)',
-                        fill: true,
-                        pointRadius: 0,
-                        tension: 0.2,
-                        yAxisID: 'y'
-                    },
-                    {
-                        label: 'CDF (累積概率)',
-                        data: cdfData,
-                        borderColor: '#ffb74d',
-                        backgroundColor: 'rgba(255, 183, 77, 0.05)',
-                        fill: false,
-                        pointRadius: 0,
-                        tension: 0.2,
-                        yAxisID: 'y1'
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                aspectRatio: 2,
-                plugins: {
-                    title: { display: true, text: '📊 抽卡分佈 (PDF + CDF)', color: '#eee' },
-                    legend: { labels: { color: '#ccc' } }
-                },
-                scales: {
-                    x: { 
-                        title: { display: true, text: '抽數', color: '#aaa' }, 
-                        ticks: { color: '#aaa', maxTicksLimit: 20 } 
-                    },
-                    y: { 
-                        beginAtZero: true, 
-                        title: { display: true, text: 'PDF', color: '#aaa' }, 
-                        ticks: { color: '#aaa' } 
-                    },
-                    y1: { 
-                        position: 'right', 
-                        beginAtZero: true, 
-                        // 唔好 set max，等佢自然去到 1.0
-                        title: { display: true, text: 'CDF', color: '#aaa' }, 
-                        grid: { drawOnChartArea: false }, 
-                        ticks: { color: '#aaa' } 
-                    }
-                }
-            }
-        });
-    }
-
-    // 鍵盤快捷鍵
+    // ==================== Keyboard shortcuts ====================
     window.addEventListener('keydown', (e)=>{
         if (e.ctrlKey) {
             if (e.key === '1') document.querySelector('[data-tab="gacha"]').click();
@@ -930,7 +940,7 @@ hold off;
         }
     });
 
-    // 語言變更時更新動態內容
+    // ==================== Language change handler ====================
     document.addEventListener('languageChanged', () => {
         if (reservedExp>0 || reservedCash>0) {
             reserveDisplay.textContent = t('resource.reserve_display_current', {exp: reservedExp.toLocaleString(), cash: reservedCash.toLocaleString()});
@@ -941,9 +951,19 @@ hold off;
             document.getElementById('modalReserveResult').textContent = 
                 t('modal.reserve_result', {exp: modal._tempReserve.exp.toLocaleString(), cash: modal._tempReserve.cash.toLocaleString()});
         }
+        // 如果 chart 已存在，更新 chart 文字
+        if (gachaChartInstance) {
+            gachaChartInstance.options.plugins.title.text = t('gacha.chart_title');
+            gachaChartInstance.data.datasets[0].label = t('gacha.chart_pdf_label');
+            gachaChartInstance.data.datasets[1].label = t('gacha.chart_cdf_label');
+            gachaChartInstance.options.scales.x.title.text = t('gacha.chart_x_label');
+            gachaChartInstance.options.scales.y.title.text = t('gacha.chart_y_label');
+            gachaChartInstance.options.scales.y1.title.text = t('gacha.chart_y1_label');
+            gachaChartInstance.update();
+        }
     });
 
-    // 初始化語言
+    // ==================== Init ====================
     buildLangSwitcher();
     loadLanguage(detectLanguage());
 
