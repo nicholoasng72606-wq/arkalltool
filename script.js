@@ -416,10 +416,12 @@ hold off;
         sortedList = []; oList = [];
         queryBtn.disabled = true;
         copyMatlabBtn.disabled = true;
+        document.getElementById('simTime').style.display = 'none';
     }
     document.getElementById('resetGachaBtn').addEventListener('click', resetGacha);
 
     startBtn.addEventListener('click', async () => {
+        const startTime = performance.now();
         const reg = parseInt(document.getElementById('regNeed').value) || 0;
         const ol = parseInt(document.getElementById('olNeed').value) || 0;
         const tl = parseInt(document.getElementById('tlNeed').value) || 0;
@@ -477,6 +479,10 @@ hold off;
                 out += '==================================================';
                 resultDiv.textContent = out;
                 drawGachaChart(sortedList, oList);
+                const endTime = performance.now();
+                const elapsedSeconds = (endTime - startTime) / 1000;
+                document.getElementById('timeDisplay').textContent = elapsedSeconds.toFixed(2);
+                document.getElementById('simTime').style.display = 'block';
                 startBtn.disabled = false;
                 queryBtn.disabled = false;
                 copyMatlabBtn.disabled = false;
@@ -800,7 +806,7 @@ hold off;
         // ========== 畫圖功能 (新增) ==========
     let gachaChartInstance = null; // 用嚟記住舊嘅圖，等下次唔會重疊
 
-    function drawGachaChart(sortedList, oList) {
+        function drawGachaChart(sortedList, oList) {
         const container = document.getElementById('gachaChartContainer');
         const canvas = document.getElementById('gachaChart');
         if (!canvas || !container) return;
