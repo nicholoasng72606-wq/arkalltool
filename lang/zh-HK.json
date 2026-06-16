@@ -1,5 +1,5 @@
 {
-  "lang_name": "語言",
+  "lang_name": "廣東話口語",
   "title": "⚔️ 羅德島後勤終端",
   "tabs": {
     "gacha": "🎲 抽卡模擬器",
@@ -14,7 +14,6 @@
     "label_coop": "聯動卡池數量：",
     "label_simtimes": "模擬次數：",
     "sim_button": "▶ 開始模擬",
-    "query_button": "🔍 查詢概率 / 所需抽數",
     "copy_matlab": "📋 複製 MATLAB 代碼",
     "reset": "⟲ 重置",
     "result_initial": "未開始模擬，請設定參數後撳「開始模擬」。",
@@ -30,7 +29,6 @@
     "result_ci9999": "99.99% 信賴區間: {{mean}} ± {{ci}}",
     "alert_times": "模擬次數要大過 0",
     "alert_no_sim": "請先做一次模擬。",
-    "query_title": "查詢工具",
     "query_pull_to_prob": "抽數 → 成功率",
     "query_prob_to_pull": "成功率 (%) → 所需抽數",
     "query_placeholder_pull": "輸入抽數",
@@ -41,7 +39,18 @@
     "query_prob_result": "成功率: {{prob}}%",
     "query_pull_result": "至少需要: {{pulls}} 抽",
     "query_prob_range": "百分比要喺 0~100 之間",
-    "copy_success": "MATLAB 代碼已複製到剪貼簿！請貼上至 MATLAB 執行。"
+    "copy_success": "MATLAB 代碼已複製到剪貼簿！請貼上至 MATLAB 執行。",
+    "sim_time_prefix": "⏱️ 模擬時間：",
+    "sim_time_suffix": "秒",
+    "chart_title": "📊 抽卡分佈 (PDF + CDF)",
+    "chart_pdf_label": "PDF (概率密度)",
+    "chart_cdf_label": "CDF (累積概率)",
+    "chart_x_label": "抽數",
+    "chart_y_label": "PDF",
+    "chart_y1_label": "CDF",
+    "highlight_label": "你查詢嘅點",
+    "highlight_label_pull_to_prob": "查詢(抽數→概率)",
+    "highlight_label_prob_to_pull": "查詢(概率→抽數)"
   },
   "resource": {
     "upgrade_label": "📋 升級路線（每行一個：星級 起始等級 結束等級 數量）",
@@ -89,7 +98,6 @@
     "label_target": "🎯 終末地目標數量：",
     "label_simtimes": "🔁 模擬次數：",
     "sim_button": "▶ 開始模擬",
-    "query_button": "🔍 查詢概率 / 所需抽數",
     "copy_matlab": "📋 複製 MATLAB 代碼",
     "reset": "⟲ 重置",
     "result_initial": "未開始模擬，請設定參數後撳「開始模擬」。",
@@ -107,7 +115,6 @@
     "result_deciles": "十分位數: {{deciles}}",
     "result_ci99": "99% 信賴區間: {{mean}} ± {{ci}}",
     "result_ci9999": "99.99% 信賴區間: {{mean}} ± {{ci}}",
-    "query_title": "終末地查詢工具",
     "query_pull_to_prob": "抽數 → 成功率",
     "query_prob_to_pull": "成功率 (%) → 所需抽數",
     "query_placeholder_pull": "輸入抽數",
@@ -147,7 +154,5 @@
     "arknights_title": "明日方舟抽卡模擬",
     "endfield_title": "終末地抽卡模擬"
   },
-  "copy_fail": "複製失敗，請手動選擇文字。",
-  "sim_time_prefix": "⏱️ 模擬時間：",
-  "sim_time_suffix": "秒"
+  "copy_fail": "複製失敗，請手動選擇文字。"
 }
