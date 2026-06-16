@@ -41,6 +41,11 @@
                 <button id="resetGachaBtn" style="background:#3f4d5e;" data-i18n="gacha.reset">⟲ 重置</button>
             </div>
             <progress id="simProgress" value="0" max="100"></progress>
+            <div id="simTime" style="color:#9fc5ff; margin:8px 0; font-size:14px; display:none;">
+                <span data-i18n="gacha.sim_time_prefix">⏱️ 模擬時間：</span>
+                <span id="timeDisplay">0.00</span>
+                <span data-i18n="gacha.sim_time_suffix">秒</span>
+            </div>
             <div id="gachaResult" class="result-box" data-i18n="gacha.result_initial">未開始模擬，請設定參數後撳「開始模擬」。</div>
             <div style="width:100%; margin: 20px auto 0 auto; background:#1a1f2e; padding:0; border-radius:12px; display:none;" id="gachaChartContainer">
                 <canvas id="gachaChart" style="width:100%;"></canvas>
